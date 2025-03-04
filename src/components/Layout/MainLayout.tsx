@@ -166,8 +166,7 @@ export default defineComponent({
                                     </div>  
                                     <div>
                                         <div class="d-flex">
-                                           
-                                            
+                                        
                                         <div class={["me-0", styles.nav_menu_item]} onClick={() => this.showSearchChapters = true}>
     <Tooltip title={this.$t("general.search-surah")}>
         <font-awesome-icon icon="search" class={styles.icon} />
