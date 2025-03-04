@@ -1,0 +1,26 @@
+img.img-fluid {
+    max-width: 50%; /* Ukuran default */
+    height: auto;
+    margin-top: 1rem;
+}
+
+@media (max-width: 768px) { /* Tablet dan lebih kecil */
+    img.img-fluid {
+        max-width: 40%;
+        margin-top: 1rem;
+    }
+}
+
+@media (max-width: 576px) { /* Mobile */
+    img.img-fluid {
+        max-width: 40%;
+        margin-top: 1rem;
+    }
+}
+
+@media (max-width: 400px) { /* Mobile kecil */
+    img.img-fluid {
+        max-width: 25%;
+        margin-top: 1rem;
+    }
+}

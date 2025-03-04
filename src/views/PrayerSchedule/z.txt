@@ -1,0 +1,205 @@
+import MainLayout from "@/components/Layout/MainLayout";
+import { defineComponent } from "vue";
+import Card from "@/components/Card/Card";
+import { useRouter } from "vue-router";
+
+export default defineComponent({
+    setup() {
+        const router = useRouter();
+
+        const goToPage = (path: string) => {
+            router.push(path);
+        };
+
+        return { goToPage };
+    },
+    render() {
+        return (
+            <MainLayout>
+                <div class="p-4">
+
+                    <Card class="mb-4 bg-primary bg-gradient text-white" headerClasses="d-flex justify-content-between">
+                        {{
+                            header: () => (
+                                <div class="d-flex justify-content-between w-100">
+                                    <div class="card-title my-auto">
+                                        <font-awesome-icon icon="quran" class="me-2"/>
+                                        <span>Pilih Metode Hafalan</span>
+                                    </div>
+                                </div>
+                            ),
+                            default: () => (
+                                <div class="row">
+                                    {/* Card Metode Hafalan Sendiri */}
+                                    <div class="col-12 col-md-6 mb-3">
+                                        <div 
+                                            class="p-4bg-gradient bg-primary text-white text-white shadow-sm rounded cursor-pointer h-100 d-flex align-items-center justify-content-center"
+                                            onClick={() => this.goToPage('/metode-hafalan-sendiri')}
+                                            style="min-height: 150px;"
+                                        >
+                                            <div class="text-center">
+                                                <font-awesome-icon icon="quran" class="mb-3" size="2x"/>
+                                                <h5 class="mb-0">Metode Hafalan Sendiri</h5>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Card Setoran ke Penyimak */}
+                                    <div class="col-12 col-md-6 mb-3">
+                                        <div 
+                                            class="p-4bg-gradient bg-primary text-white shadow-sm rounded cursor-pointer h-100 d-flex align-items-center justify-content-center"
+                                            onClick={() => this.goToPage('/setoran-penyimak')}
+                                            style="min-height: 150px;"
+                                        >
+                                            <div class="text-center">
+                                                <font-awesome-icon icon="quran" class="mb-3" size="2x"/>
+                                                <h5 class="mb-0">Setoran ke Penyimak</h5>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )
+                        }}
+                    </Card>
+
+                </div>
+            </MainLayout>
+        );
+    }
+});
+
+// import MainLayout from "@/components/Layout/MainLayout";
+// import { defineComponent } from "vue";
+
+// export default defineComponent({
+//     render() {
+//         return (
+//             <MainLayout>
+//                 <div class="text-center">coming soon !!</div>
+//             </MainLayout>
+//         )
+//     }
+// })
+
+
+
+
+
+// import { computed, defineComponent, h } from "vue";
+// import { ref, watch } from "vue";
+// import { useRoute } from "vue-router";
+// import { useLocalStorage } from "@/hooks/storage";
+// import { useChapters } from "@/hooks/chapters";
+// import { useI18n } from "vue-i18n";
+// import { Bookmarks, Sort } from "@/types";
+// import MainLayout from "@/components/Layout/MainLayout";
+// import Surah from "../Home/Surah/Index";
+// import Juz from "../Home/Juz/Index";
+// import historyReplaceState from "@/helpers/history-replace-state";
+// import collect from "collect.js";
+// import toast from "@/lib/toast";
+
+// type Tab = "surah" | "juz";
+
+// export default defineComponent({
+//     setup() {
+//         const route = useRoute();
+//         const storage = useLocalStorage();
+//         const chapters = useChapters();
+//         const trans = useI18n();
+//         const tab = ref<Tab>("surah");
+//         const sort = ref<Sort>("asc");
+//         const isDeletingBookmark = ref<boolean>(false);
+
+//         const bookmarks = computed<Bookmarks[]>(() => {
+//             const bookmark = storage.get("BOOKMARK", {});
+
+//             return collect(Object.keys(bookmark)).map(verse => {
+//                 const chapterNumber = Number(verse.split(":")[0]);
+//                 let chapter = null;
+
+//                 if (!isNaN(chapterNumber) && (chapter = chapters.find(chapterNumber))) {
+//                     return {
+//                         id: verse.split(":")[0],
+//                         verse: verse.split(":")[1],
+//                         verse_key: verse,
+//                         name: chapter.name_simple,
+//                         created_at: bookmark[verse]
+//                     }
+//                 }
+//             }).filter(item => item?.created_at !== undefined).sortByDesc((item: Bookmarks) => item.created_at).toArray();
+//         });
+
+//         if (["surah", "juz"].includes(route.query.tab as string)) {
+//             tab.value = route.query.tab as Tab;
+//         }
+
+//         watch(tab, (value) => {
+//             historyReplaceState(null, {tab: value})
+//         });
+
+//         function deleteAllBookmark() {
+//             toast.confirm(trans.t("general.deleting-bookmark"), {
+//                 onOpen: () => {
+//                     isDeletingBookmark.value = true;
+//                 }
+// 			}).then(({isConfirmed}) => {
+//                 isDeletingBookmark.value = false;
+// 				if (isConfirmed) {
+// 					storage.set("BOOKMARK", {});
+// 				}
+// 			})
+//         }
+
+//         function deleteBookmark(key: string) {
+//             storage.set("BOOKMARK", (bookmark: Record<string, any> = {}) => {
+//                 delete bookmark[key];
+//                 return bookmark;
+//             })
+//         }
+
+//         return {
+//             tab,
+//             sort,
+//             bookmarks,
+//             deleteAllBookmark,
+//             deleteBookmark,
+//             isDeletingBookmark
+//         }
+//     },
+//     render() {
+//         return (
+            
+//                 <MainLayout>
+//                     <div class="d-flex justify-content-between mb-3">
+//                         <ul class="nav nav-pills mb-3">
+//                             <li class="nav-item" onClick={() => this.tab = "surah"}>
+//                                 <div class={["nav-link cursor-pointer", {active: this.tab == "surah"}]}>
+//                                     {this.$t("general.surah")}
+//                                 </div>
+//                             </li>
+//                             <li class="nav-item" onClick={() => this.tab = "juz"}>
+//                                 <div class={["nav-link cursor-pointer", {active: this.tab == "juz"}]}>
+//                                     {this.$t("general.juz")}
+//                                 </div>
+//                             </li>
+//                         </ul>
+//                         <div class="my-auto">
+//                             <small>
+//                                 <span class="me-2">{this.$t("sort.by")}:</span>
+//                                 <span class="text-primary cursor-pointer" onClick={() => {
+//                                     this.sort = this.sort == "desc" ? "asc" : "desc"
+//                                 }}>
+//                                     <span class="text-uppercase">
+//                                         {this.$t(`sort.${this.sort}`)}
+//                                     </span>
+//                                     <font-awesome-icon icon={this.sort == "desc" ? "caret-down" : "caret-up"} class="ms-1" />
+//                                 </span>
+//                             </small>
+//                         </div>
+//                     </div>
+//                     {h(this.tab == "surah" ? Surah : Juz, {sort: this.sort})}
+//                 </MainLayout>
+//         )
+//     }
+// })
