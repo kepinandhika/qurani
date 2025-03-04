@@ -160,13 +160,14 @@ export default defineComponent({
                                         </div>
                                         <router-link to="/">
                                         <div class={styles.nav_app_logo}>
-                                            <img src="assets/img/qurani.png" alt={this.$config.APP_NAME} />
+                                            <img src="/assets/img/qurani.png" alt={this.$config.APP_NAME} />
                                         </div>
                                         </router-link>
-                                    </div>  
+                                    </div>
                                     <div>
                                         <div class="d-flex">
-                                        
+                                           
+                                            
                                         <div class={["me-0", styles.nav_menu_item]} onClick={() => this.showSearchChapters = true}>
     <Tooltip title={this.$t("general.search-surah")}>
         <font-awesome-icon icon="search" class={styles.icon} />
