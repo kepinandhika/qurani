@@ -34,42 +34,44 @@ export default defineComponent({
         const filteredChapters = computed<Chapters[]>(() => {
             if (!query.value.trim()) return [];
             return collect(chapters.data.value)
-                .filter((item) => item.name_simple.toLowerCase().includes(query.value.toLowerCase()))
+                .filter((item: Chapters) => 
+                    item.name_simple.toLowerCase().includes(query.value.toLowerCase())
+                )
                 .take(10)
                 .toArray();
         });
 
         // Ambil data favorit dari local storage
         const favorite = computed<Chapters[]>(() => {
-            const favoriteData = storage.get(STORAGE_KEY, {});
+            const favoriteData = storage.get(STORAGE_KEY, {}) as Record<string, number>;
             const favoriteArray = Object.keys(favoriteData).map(id => [id, favoriteData[id]]);
             return collect(favoriteArray)
                 .sortByDesc((item) => item[1])
                 .map(([id]) => chapters.data.value.find(chapter => chapter.id === Number(id)))
                 .filter(item => item !== undefined)
-                .toArray();
+                .toArray() as Chapters[];
         });
 
         function isFavorite(id: number) {
-            const favoriteData = storage.get(STORAGE_KEY, {});
+            const favoriteData = storage.get(STORAGE_KEY, {}) as Record<string, number>;
             return Object.keys(favoriteData).map(Number).includes(id);
         }
 
         function deleteFavorite(id: number) {
-            storage.set(STORAGE_KEY, (favoriteData = {}) => {
+            storage.set(STORAGE_KEY, (favoriteData: Record<string, number> = {}) => {
                 const newData = { ...favoriteData };
-                delete newData[id];
+                delete newData[String(id)];
                 return newData;
             });
         }
 
         function addFavorite(id: number) {
-            storage.set(STORAGE_KEY, (favoriteData = {}) => {
+            storage.set(STORAGE_KEY, (favoriteData: Record<string, number> = {}) => {
                 if (isFavorite(id)) {
-                    delete favoriteData[id];
+                    delete favoriteData[String(id)];
                 } else {
                     const values = Object.values(favoriteData);
-                    favoriteData[id] = values.length ? Math.max(...values) + 1 : 1;
+                    favoriteData[String(id)] = values.length ? Math.max(...values) + 1 : 1;
                 }
                 return favoriteData;
             });
