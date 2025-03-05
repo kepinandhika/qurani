@@ -1,14 +1,14 @@
 import { Chapters, QuranReader, Words } from "@/types";
-import { defineComponent, PropType, ref, watch, nextTick, onBeforeUnmount, VNode, computed } from "vue";
+import { defineComponent, PropType, ref, watch, nextTick, onBeforeUnmount, VNode, computed, Teleport } from "vue";
 import { Tooltip as BSTooltip, Popover as BSPopover } from "bootstrap";
 import { useI18n } from "vue-i18n";
 import { useChapters } from "@/hooks/chapters";
 import Tooltip from "../Tooltip/Tooltip";
-import Popover from "../Popover/Popover";
 import ButtonBookmark from "./Button/Bookmark";
 import ButtonCopy from "./Button/Copy";
 import ButtonTafsir from "./Button/Tafsir";
 import ButtonPlay from "./Button/Play";
+import Popover from "../Popover/Popover";
 import styles from "./ArabicText.module.scss";
 
 export default defineComponent({
@@ -23,7 +23,6 @@ export default defineComponent({
         verseNumber: {
             type: Number
         },
-        // Ubah highlight sehingga nilainya dibandingkan dengan word.id
         highlight: {
             type: [Number, Boolean],
             default: false
@@ -36,9 +35,14 @@ export default defineComponent({
             type: Boolean,
             default: false
         },
-        // Hapus properti showTransliterationInline dan showTranslationInline agar tidak tampil
-        // showTransliterationInline: { type: Boolean, default: false },
-        // showTranslationInline: { type: Boolean, default: false },
+        showTransliterationInline: {
+            type: Boolean,
+            default: false
+        },
+        showTranslationInline: {
+            type: Boolean,
+            default: false
+        },
         showTransliterationTooltip: {
             type: Boolean,
             default: false
@@ -47,8 +51,6 @@ export default defineComponent({
             type: Boolean,
             default: false
         },
-        // properti buttons tidak lagi dipakai untuk tombol bookmark/copy/tafsir/play
-        // karena akan diganti dengan pilihan error
         buttons: {
             type: Array as PropType<QuranReader["PROPS_BUTTON"]>,
             default: () => []
@@ -58,116 +60,119 @@ export default defineComponent({
         const trans = useI18n();
         const chapters = useChapters();
         const tooltipInstance = ref<Record<number, BSTooltip>>({});
-        const popoverInstance = ref<Record<number, BSPopover>>({});
+        const popoverInstance =  ref<Record<number, BSPopover>>({});
+        const popover = ref<BSPopover | null>(null);
         const isHover = ref<boolean>(false);
         const refs = ref<{ popoverContent: HTMLElement | null }>({
             popoverContent: null
         });
-        // Tambahkan ref untuk menyimpan kata yang sedang dipilih
-        const currentWord = ref<Words | null>(null);
 
         const verseKey = computed<string>(() => {
-            return [props.chapterId, props.verseNumber].filter(v => v !== undefined).join(":");
+            return [props.chapterId, props.verseNumber].filter(v => v !== undefined).join(":")
         });
 
         const chapter = computed<Chapters | null>(() => {
-            return props.chapterId ? chapters.find(props.chapterId) : null;
+            return props.chapterId ? chapters.find(props.chapterId) : null
         });
 
         const textUthmani = computed<string>(() => {
             return props.words.map(word => word.text_uthmani).join(" ");
         });
 
-        // Jika chapterId & verseNumber ada, gunakan popover untuk pilihan error
         const shouldUseButton = computed<boolean>(() => {
-            return props.chapterId !== undefined && props.verseNumber !== undefined;
+            return props.buttons.length > 0 && props.chapterId !== undefined && props.verseNumber !== undefined
         });
 
-        // Ubah perbandingan highlight menggunakan word.id
-        function isHighlightWord(wordId: number) {
-            return props.highlight === wordId;
+        function isHighlightWord(position: number) {
+            return (props.highlight === position);
         }
 
-        // Inisialisasi tooltip dengan menggunakan word.id sebagai key
-        function onInitTooltip(word: Words) {
+        function onInitTooltip(key: number) {
             return function (tooltip: BSTooltip) {
-                tooltipInstance.value[word.id] = tooltip;
-                if (props.showTooltipWhenHighlight && isHighlightWord(word.id)) {
+                tooltipInstance.value[key] = tooltip;
+                if (props.showTooltipWhenHighlight && isHighlightWord(key)) {
                     nextTick(() => {
                         tooltip.show();
-                    });
+                    })
                 }
             }
         }
 
-        // Inisialisasi popover dengan menggunakan word.id sebagai key
-        function onInitPopover(word: Words) {
+        function onInitPopover(key: number) {
             return function (popover: BSPopover) {
-                popoverInstance.value[word.id] = popover;
+                popoverInstance.value[key] = popover;
             }
         }
 
-        // Saat menekan (klik) pada sebuah kata, simpan kata tersebut dan toggle popover
-        function onClick(word: Words) {
+        function onClickHold(key: number) {
             return function () {
-                currentWord.value = word;
-                Object.keys(popoverInstance.value).forEach((key) => {
-                    if (Number(key) !== word.id) {
-                        popoverInstance.value[Number(key)]?.hide();
-                    }
-                });
-                popoverInstance.value[word.id]?.toggle();
-                // Sembunyikan tooltip setelah popover muncul
-                setTimeout(() => tooltipInstance.value[word.id]?.hide(), 100);
+                Object.keys(popoverInstance.value).forEach((keys) => Number(keys) !== key && popoverInstance.value[Number(keys)]?.hide())
+                popoverInstance.value[key]?.toggle();
+                // hide tooltip after popover open
+                setTimeout(() => tooltipInstance.value[key]?.hide(), 100);
             }
         }
 
-        function onMouseOver(word: Words) {
+        function onMouseOver(key: number) {
             isHover.value = true;
-            if (!props.showTooltipWhenHighlight || !isHighlightWord(word.id)) {
-                tooltipInstance.value[word.id]?.show();
+            if (!props.showTooltipWhenHighlight || !isHighlightWord(key)) {
+                tooltipInstance.value[key]?.show();
             }
         }
 
-        function onMouseLeave(word: Words) {
+        function onMouseLeave(key: number) {
             isHover.value = false;
-            if (!props.showTooltipWhenHighlight || !isHighlightWord(word.id)) {
-                tooltipInstance.value[word.id]?.hide();
+            if (!props.showTooltipWhenHighlight || !isHighlightWord(key)) {
+                tooltipInstance.value[key]?.hide();
             }
         }
+        
+        
 
-        // Fungsi untuk menangani pilihan error
-        function onErrorSelect(errorType: string) {
-            if (currentWord.value) {
-                console.log(`Error selected for word ${currentWord.value.id}: ${errorType}`);
-                // Lakukan penanganan lebih lanjut, misalnya emit event atau simpan data error
-                popoverInstance.value[currentWord.value.id]?.hide();
-            }
-        }
+        // function getTooltipText(word: Words) {
+        //     let text: string = "";
 
-        // Bungkus kata dengan Popover jika harus menampilkan tombol error
+        //     if (props.showTranslationTooltip) {
+        //         text+= `<div>${word.char_type_name == "end" ? trans.t("quran-reader.word-number", {ayah: word.translation.text.match(/[0-9]+/)?.[0]}).toLowerCase() : word.translation.text}</div>`;
+        //     }
+
+        //     if (props.showTranslationTooltip && props.showTransliterationTooltip) {
+        //         text+= "<div class='border-top mt-1 mb-1'></div>";
+        //     }
+
+        //     if (props.showTransliterationTooltip) {
+        //         text+= `<div>${word.char_type_name == "end" ? word.translation.text : word.transliteration.text}</div>`;
+        //     }
+
+        //     return text
+        // }
+
         function wordWrapper(word: Words, children: VNode) {
             if (!shouldUseButton.value) {
-                return <>{children}</>;
+                return (
+                    <>
+                        {children}
+                    </>
+                )
             } else {
                 return (
                     <Popover
                         key={`popover-${word.id}`}
                         placement="top"
                         options={{ html: true, trigger: "manual", content: () => refs.value.popoverContent! }}
-                        onInit={onInitPopover(word)}
-                        onClick={onClick(word)}
+                        onInit={onInitPopover(word.position)}
+                        v-clickHold:$300_vibrate={onClickHold(word.position)}
                     >
                         {{
                             title: () => (
                                 <div class="text-center">
-                                    {trans.t("quran-reader.word-number", { ayah: props.verseNumber })}
+                                    {trans.t("quran-reader.word-number", {ayah: props.verseNumber})}
                                 </div>
                             ),
                             default: () => children
                         }}
                     </Popover>
-                );
+                )
             }
         }
 
@@ -175,12 +180,15 @@ export default defineComponent({
             if (!props.showTooltipWhenHighlight) {
                 return;
             }
+
             if (typeof value === "number") {
                 tooltipInstance.value[value]?.show();
             }
+
             if (typeof oldValue === "number") {
                 tooltipInstance.value[oldValue]?.hide();
             }
+            
         });
 
         watch(() => props.showTooltipWhenHighlight, (value) => {
@@ -192,7 +200,7 @@ export default defineComponent({
         onBeforeUnmount(() => {
             isHover.value = false;
             Object.keys(tooltipInstance.value).forEach((key) => tooltipInstance.value[Number(key)]?.hide());
-            Object.keys(popoverInstance.value).forEach((key) => popoverInstance.value[Number(key)]?.hide());
+            Object.keys(popoverInstance.value).forEach((key) => popoverInstance.value[Number(key)]?.hide())
         });
 
         return {
@@ -202,42 +210,55 @@ export default defineComponent({
             refs,
             chapter,
             textUthmani,
+            popover,
             isHover,
             shouldUseButton,
             isHighlightWord,
             onInitTooltip,
             onInitPopover,
-            onClick,
+            onClickHold,
             onMouseOver,
             onMouseLeave,
-            onErrorSelect,
             wordWrapper,
-            currentWord
         }
     },
     render() {
         return (
             <>
-                {/* Hidden popover content untuk pilihan error */}
-                {this.shouldUseButton && (
-                    <div class="d-none">
-                        <div ref={(ref) => this.refs.popoverContent = (ref as HTMLElement)} class="d-flex flex-column">
-                            <button class="btn btn-outline-danger mb-1" onClick={() => this.onErrorSelect("Salah Tajwid")}>
-                                Salah Tajwid
-                            </button>
-                            <button class="btn btn-outline-warning mb-1" onClick={() => this.onErrorSelect("Salah Panjang Pendek")}>
-                                Salah Panjang Pendek
-                            </button>
-                            <button class="btn btn-outline-info" onClick={() => this.onErrorSelect("Salah Huruf")}>
-                                Salah Huruf
-                            </button>
+                <span dir="rtl" class={[styles.arabic_text, {
+                    [styles.highlight]: this.highlight === true,
+                    [styles.hover]: this.isHover && this.enableHover
+                }]}>
+                    {/*MAIN MAIN*/}
+                    {this.shouldUseButton && (
+                        <div class="d-none">
+                            <div ref={(ref) => this.refs.popoverContent = (ref as HTMLElement)} class="d-flex">
+                                {this.buttons.includes("bookmark") && this.chapter !== null && (
+                                    <ButtonBookmark
+                                        verseKey={this.verseKey}
+                                        name={this.chapter.name_simple}
+                                    />
+                                )}
+                                {this.buttons.includes("copy") && (
+                                    <ButtonCopy
+                                        text={this.textUthmani}
+                                    />
+                                )}
+                                {this.buttons.includes("tafsir") && (
+                                    <ButtonTafsir
+                                        chapterId={this.chapterId!}
+                                        verseNumber={this.verseNumber!}
+                                    />
+                                )}
+                                {this.buttons.includes("play") && (
+                                    <ButtonPlay
+                                        chapterId={this.chapterId!}
+                                        verseNumber={this.verseNumber!}
+                                    />
+                                )}
+                            </div>
                         </div>
-                    </div>
-                )}
-                <span dir="rtl" class={[
-                    styles.arabic_text,
-                    { [styles.highlight]: this.highlight === true, [styles.hover]: this.isHover && this.enableHover }
-                ]}>
+                    )}
                     {this.words.map(word => this.wordWrapper(word, (
                         <Tooltip
                             key={`tooltip-${word.id}`}
@@ -246,19 +267,23 @@ export default defineComponent({
                             options={{
                                 trigger: "manual",
                                 html: true,
-                                delay: { show: 500, hide: 2000 },
-                                title: () => this.getTooltipText(word) // jika masih diperlukan, bisa disesuaikan atau dihapus
+                                delay: {show: 500, hide: 2000},
+                                
                             }}
-                            class={[
-                                styles.text_wrapper,
-                                { [styles.highlight_word]: this.isHighlightWord(word.id), "ps-2": false }
-                            ]}
-                            onInit={this.onInitTooltip(word)}
-                            data-word-position={word.position}
-                            data-word-location={word.location}
-                            data-word-type={word.char_type_name}
-                            onmouseover={() => this.onMouseOver(word)}
-                            onmouseleave={() => this.onMouseLeave(word)}
+                            class={[styles.text_wrapper, {
+                                [styles.highlight_word]: this.isHighlightWord(word.position),
+                                "ps-2": this.showTransliterationInline
+                            }]}
+                            onInit={this.onInitTooltip(word.position)}
+                            {
+                                ...{
+                                    "data-word-position": word.position,
+                                    "data-word-location": word.location,
+                                    "data-word-type": word.char_type_name,
+                                    "onmouseover": () => this.onMouseOver(word.position),
+                                    "onmouseleave": () => this.onMouseLeave(word.position)
+                                }
+                            }
                         >
                             <div class={["fs-arabic-auto text-center", {
                                 "font-uthmanic": word.char_type_name == "end",
@@ -266,10 +291,20 @@ export default defineComponent({
                             }]}>
                                 {word.text_uthmani}
                             </div>
+                            {this.showTransliterationInline && (
+                                <div class="text-center mt-1 mb-1">
+                                    <i>{word.char_type_name == "word" ? word.transliteration.text : word.translation.text}</i>
+                                </div>
+                            )}
+                            {this.showTranslationInline && (word.char_type_name == "word" || !this.showTransliterationInline) && (
+                                <div class="text-center mt-1 mb-1">
+                                    <p>{word.translation.text}</p>
+                                </div>
+                            )}
                         </Tooltip>
                     )))}
                 </span>
             </>
-        );
+        )
     }
-});
+})
