@@ -1,33 +1,18 @@
-
 import { Chapters, QuranReader, Words } from "@/types";
 import { defineComponent, PropType, ref, watch, nextTick, onBeforeUnmount, VNode, computed, Teleport } from "vue";
 import { Tooltip as BSTooltip, Popover as BSPopover } from "bootstrap";
 import { useI18n } from "vue-i18n";
 import { useChapters } from "@/hooks/chapters";
 import Tooltip from "../Tooltip/Tooltip";
-import Popover from "../Popover/Popover";
 import ButtonBookmark from "./Button/Bookmark";
 import ButtonCopy from "./Button/Copy";
 import ButtonTafsir from "./Button/Tafsir";
 import ButtonPlay from "./Button/Play";
+import Popover from "../Popover/Popover";
 import styles from "./ArabicText.module.scss";
-
-interface TooltipOptions {
-    showUnreadable?: boolean;
-    showIncorrect?: boolean;
-    showTajweedError?: boolean;
-}
 
 export default defineComponent({
     props: {
-        tooltipOptions: {
-            type: Object as PropType<TooltipOptions>,
-            default: () => ({
-                showUnreadable: true,
-                showIncorrect: true,
-                showTajweedError: true,
-            }),
-        },
         words: {
             type: Array as PropType<Words[]>,
             required: true
@@ -69,8 +54,7 @@ export default defineComponent({
         buttons: {
             type: Array as PropType<QuranReader["PROPS_BUTTON"]>,
             default: () => []
-        },
-        
+        }
     },
     setup(props) {
         const trans = useI18n();
@@ -142,40 +126,25 @@ export default defineComponent({
                 tooltipInstance.value[key]?.hide();
             }
         }
-
-        interface TooltipOptions {
-            showUnreadable?: boolean;
-            showIncorrect?: boolean;
-            showTajweedError?: boolean;
-        }
         
-        function getTooltipText(word: Words, options: TooltipOptions = {}): string {
+        function getTooltipText(word: Words) {
             let text: string = "";
-        
-            // Default options
-            const defaultOptions: TooltipOptions = {
-                showUnreadable: true,
-                showIncorrect: true,
-                showTajweedError: true,
-            };
-        
-            // Merge default options with provided options
-            const finalOptions = { ...defaultOptions, ...options };
         
             // Jika char_type_name adalah 'end', berarti ini akhir ayat
             if (word.char_type_name === "end") {
-                if (finalOptions.showUnreadable) text += `<div>Ayat Tidak Dibaca</div>`;
-                if (finalOptions.showIncorrect) text += `<div>Ayat Terbalik</div>`;
-                if (finalOptions.showTajweedError) text += `<div>Ayat Salah</div>`;
+                text = `<div>Ayat Tidak Dibaca</div>`;
+                text = `<div>Ayat Terbalik</div>`;
+                text = `<div>Ayat Salah</div>`;
             } else {
                 // Kalau bukan akhir ayat, tampilkan 'Tandai Kata'
-                if (finalOptions.showUnreadable) text += `<div>Kata Tidak Dibaca</div>`;
-                if (finalOptions.showIncorrect) text += `<div>Kata Salah</div>`;
-                if (finalOptions.showTajweedError) text += `<div>Tadjwid Kata Salah</div>`;
+                text = `<div>Kata Tidak Dibaca</div>`;
+                text = `<div>Kata </div>`;
+                text = `<div>Kata</div>`;
             }
         
             return text;
         }
+        
 
         // function getTooltipText(word: Words) {
         //     let text: string = "";
@@ -357,4 +326,3 @@ export default defineComponent({
         )
     }
 })
-
