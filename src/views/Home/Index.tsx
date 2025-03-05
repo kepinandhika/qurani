@@ -73,7 +73,7 @@ export default defineComponent({
                     {this.$t(`sort.${this.sort}`)}
                   </span>
                   <font-awesome-icon
-                    icon={this.sort == "desc" ? "caret-down" : "caret-up"}
+                    icon={this.sort == "desc" ? "caret-up" : "caret-down"}
                     class="ms-1"
                   />
                 </span>

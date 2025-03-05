@@ -185,11 +185,6 @@ export default defineComponent({
                                                         v-model={this.$setting.transliterationDisplay.inline}
                                                         disabled={!this.$setting.transliteration}
                                                     />
-                                                    <Checkbox
-                                                        label={this.$t("setting.display-tooltip")}
-                                                        v-model={this.$setting.transliterationDisplay.tooltip}
-                                                        disabled={!this.$setting.transliteration}
-                                                    />
                                                 </div>
                                             </div>
                                         </div>
@@ -212,11 +207,7 @@ export default defineComponent({
                                                         v-model={this.$setting.translationDisplay.inline}
                                                         disabled={!this.$setting.translation}
                                                     />
-                                                    <Checkbox
-                                                        label={this.$t("setting.display-tooltip")}
-                                                        v-model={this.$setting.translationDisplay.tooltip}
-                                                        disabled={!this.$setting.translation}
-                                                    />
+                                                   
                                                 </div>
                                             </div>
                                         </div>

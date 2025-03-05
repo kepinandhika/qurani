@@ -143,7 +143,7 @@ export default defineComponent({
                                 </div>
                                 <div class={["card-body custom-scrollbar", styles.card_body]}>
                                     {!this.query.trim() ? (
-                                        <p class="font-monospace text-center">{this.$t("search.type-to-search")}</p>
+                                        <p class="font-monospace text-center">{this.$t("")}</p>
                                     ) : this.filteredChapters.length > 0 ? this.filteredChapters.map(item => (
                                         <div key={item.id} class={[styles.chapter, "d-flex justify-content-between align-items-center"]}>
                                             <span class="w-100 h-100" onClick={() => this.gotoChapter(item.id)}>
