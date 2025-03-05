@@ -34,11 +34,10 @@ export default defineComponent({
         const filteredChapters = computed<Chapters[]>(() => {
             if (!query.value.trim()) return [];
             return collect(chapters.data.value)
-                .filter((item: Chapters) => 
-                    item.name_simple.toLowerCase().includes(query.value.toLowerCase())
-                )
+                // Kita menghilangkan anotasi tipe eksplisit pada parameter callback dan gunakan assertion di dalamnya
+                .filter(item => (item as Chapters).name_simple.toLowerCase().includes(query.value.toLowerCase()))
                 .take(10)
-                .toArray();
+                .toArray() as Chapters[];
         });
 
         // Ambil data favorit dari local storage
@@ -46,8 +45,9 @@ export default defineComponent({
             const favoriteData = storage.get(STORAGE_KEY, {}) as Record<string, number>;
             const favoriteArray = Object.keys(favoriteData).map(id => [id, favoriteData[id]]);
             return collect(favoriteArray)
-                .sortByDesc((item) => item[1])
-                .map(([id]) => chapters.data.value.find(chapter => chapter.id === Number(id)))
+                // Tambahkan anotasi tipe pada parameter callback untuk menghindari implisit any
+                .sortByDesc((item: [string, number]) => item[1])
+                .map(([id]: [string, number]) => chapters.data.value.find(chapter => chapter.id === Number(id)))
                 .filter(item => item !== undefined)
                 .toArray() as Chapters[];
         });
