@@ -9,23 +9,18 @@ import collect from "collect.js";
 import Tooltip from "../Tooltip/Tooltip";
 import router from "@/routes";
 
-type FavoriteData = Record<number, number>;
-
 export default defineComponent({
-    emits: {
-        "update:show": (value: boolean) => typeof value === "boolean"
-    },
+    emits: ["update:show"],
     props: {
         show: Boolean
     },
     setup(props, { emit }) {
         const storage = useLocalStorage();
         const chapters = useChapters();
-        const query = ref("");
+        const query = ref<string>("");
         const inputRef = ref<HTMLInputElement | null>(null);
-        
-        const shouldShow = computed({
-            set(value: boolean) {
+        const shouldShow = computed<boolean>({
+            set(value) {
                 emit("update:show", value);
             },
             get() {
@@ -35,48 +30,60 @@ export default defineComponent({
 
         const STORAGE_KEY = "CHAPTERS_FAV";
 
+        // Filter surah berdasarkan input pencarian
         const filteredChapters = computed<Chapters[]>(() => {
             if (!query.value.trim()) return [];
-            return collect(chapters.data.value || [])
-                .filter((item: Chapters) => item.name_simple.toLowerCase().includes(query.value.toLowerCase()))
+            return collect(chapters.data.value)
+                .filter((item) => item.name_simple.toLowerCase().includes(query.value.toLowerCase()))
                 .take(10)
                 .toArray();
         });
 
+        // Ambil data favorit dari local storage
         const favorite = computed<Chapters[]>(() => {
-            const favoriteData: FavoriteData = storage.get(STORAGE_KEY, {});
-            return Object.keys(favoriteData)
-                .map(id => [Number(id), favoriteData[Number(id)]])
-                .sort((a, b) => b[1] - a[1])
-                .map(([id]) => chapters.find?.(id) || null)
-                .filter((item): item is Chapters => item !== null);
+            const favoriteData = storage.get(STORAGE_KEY, {});
+            const favoriteArray = Object.keys(favoriteData).map(id => [id, favoriteData[id]]);
+            return collect(favoriteArray)
+                .sortByDesc((item) => item[1])
+                .map(([id]) => chapters.data.value.find(chapter => chapter.id === Number(id)))
+                .filter(item => item !== undefined)
+                .toArray();
         });
 
-        function isFavorite(id: number): boolean {
-            return !!storage.get(STORAGE_KEY, {})[id];
+        function isFavorite(id: number) {
+            const favoriteData = storage.get(STORAGE_KEY, {});
+            return Object.keys(favoriteData).map(Number).includes(id);
         }
 
-        function toggleFavorite(id: number): void {
-            storage.set(STORAGE_KEY, (fav: FavoriteData = {}) => {
-                if (fav[id]) {
-                    delete fav[id];
-                } else {
-                    fav[id] = Object.keys(fav).length ? Math.max(...Object.values(fav)) + 1 : 1;
-                }
-                return fav;
+        function deleteFavorite(id: number) {
+            storage.set(STORAGE_KEY, (favoriteData = {}) => {
+                const newData = { ...favoriteData };
+                delete newData[id];
+                return newData;
             });
         }
 
-        function gotoChapter(id: number): void {
-            router.push({ name: "chapter", params: { id: String(id) } });
+        function addFavorite(id: number) {
+            storage.set(STORAGE_KEY, (favoriteData = {}) => {
+                if (isFavorite(id)) {
+                    delete favoriteData[id];
+                } else {
+                    const values = Object.values(favoriteData);
+                    favoriteData[id] = values.length ? Math.max(...values) + 1 : 1;
+                }
+                return favoriteData;
+            });
+        }
+
+        function gotoChapter(id: number) {
+            shouldShow.value = false; // Tutup modal setelah navigasi
+            router.push({ name: "chapter", params: { id: id.toString() } });
         }
 
         watch(shouldShow, (show) => {
+            show ? scroll.disable() : scroll.enable();
             if (show) {
-                scroll.disable();
                 nextTick(() => inputRef.value?.focus());
-            } else {
-                scroll.enable();
             }
         }, { immediate: true });
 
@@ -88,7 +95,8 @@ export default defineComponent({
             inputRef,
             gotoChapter,
             isFavorite,
-            toggleFavorite
+            addFavorite,
+            deleteFavorite
         };
     },
     render() {
@@ -112,19 +120,25 @@ export default defineComponent({
                                         <font-awesome-icon icon="search" />
                                     </div>
                                     <div class="w-100 me-3 ms-3 d-flex">
-                                        <input
-                                            v-model={this.query}
-                                            placeholder={`/ ${this.$t("general.search-surah").toLowerCase()}`}
-                                            class={styles.search_input}
-                                            ref="inputRef"
-                                        />
+                                        <div class="w-100">
+                                            <input
+                                                v-model={this.query}
+                                                placeholder={`/ ${this.$t("general.search-surah").toLowerCase()}`}
+                                                class={styles.search_input}
+                                                ref="inputRef"
+                                            />
+                                        </div>
                                         {this.query.trim() && (
-                                            <small class={["text-uppercase text-muted", styles.clear_search]} onClick={() => this.query = ""}>
-                                                {this.$t("general.clear")}
-                                            </small>
+                                            <div class="d-flex align-items-center">
+                                                <small class={["text-uppercase text-muted", styles.clear_search]} onClick={() => this.query = ""}>
+                                                    {this.$t("general.clear")}
+                                                </small>
+                                            </div>
                                         )}
                                     </div>
-                                    <button class="btn-close" onClick={() => this.shouldShow = false}></button>
+                                    <div class="h-100 d-flex align-items-center">
+                                        <button class="btn-close" onClick={() => this.shouldShow = false}></button>
+                                    </div>
                                 </div>
                                 <div class={["card-body custom-scrollbar", styles.card_body]}>
                                     {!this.query.trim() ? (
@@ -137,8 +151,9 @@ export default defineComponent({
                                             <Tooltip title={this.$t("general.add-to-favorite")} options={{ container: "." + styles.card }}>
                                                 <Button
                                                     size="sm"
+                                                    key={[item.id, this.isFavorite(item.id)].toString()}
                                                     type={this.isFavorite(item.id) ? "primary" : "default"}
-                                                    onClick={() => this.toggleFavorite(item.id)}
+                                                    onClick={() => this.addFavorite(item.id)}
                                                 >
                                                     <font-awesome-icon icon="star" />
                                                 </Button>
@@ -161,6 +176,15 @@ export default defineComponent({
                                                     <span class="w-100 h-100" onClick={() => this.gotoChapter(item.id)}>
                                                         {item.name_simple}
                                                     </span>
+                                                    <Tooltip title={this.$t("general.delete-from-favorite")} options={{ container: "." + styles.card }}>
+                                                        <Button
+                                                            size="sm"
+                                                            type="primary"
+                                                            onClick={() => this.deleteFavorite(item.id)}
+                                                        >
+                                                            <font-awesome-icon icon="star" />
+                                                        </Button>
+                                                    </Tooltip>
                                                 </div>
                                             ))}
                                         </div>
