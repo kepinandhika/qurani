@@ -55,6 +55,14 @@ const routes: RouteRecordRaw[] = [
             title: "hafalan"
         }
     },
+        {
+        path: "/bookmark",
+        name: "bookmark",
+        component: () => import("@/views/Bookmark/Bookmark"),
+        meta: {
+            title: "Bookmark"
+        }
+    },
     {
         path: "/:catchAll(.*)",
         component: () => import("@/views/Error/PageNotFound"),

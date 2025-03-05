@@ -7,6 +7,14 @@ import Tooltip from "@/components/Tooltip/Tooltip";
 import Setting from "./Setting";
 import SearchChapters from "./SearchChapters";
 import { useRouter } from "vue-router";
+import { library } from "@fortawesome/fontawesome-svg-core";
+import {
+  faSignInAlt,
+  faUserPlus,
+  faSignOutAlt,
+  faBookmark, // Tambahkan ikon bookmark
+} from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 const SIDBAR_MENU: Array<{ icon: string, label: string, route: string }> = [
     {
@@ -40,6 +48,27 @@ export default defineComponent({
         const navbar = ref<HTMLElement | null>(null);
         const showSetting = ref<boolean>(false);
         const showSearchChapters = ref<boolean>(false);
+        const isLoggedIn = ref<boolean>(false); // State untuk menyimpan status login
+
+        // Cek status login saat komponen dimount
+        onMounted(() => {
+            const loggedIn = localStorage.getItem("isLoggedIn");
+            if (loggedIn === "true") {
+                isLoggedIn.value = true;
+            }
+        });
+
+        // Fungsi untuk logout
+        function logout() {
+            isLoggedIn.value = false;
+            localStorage.removeItem("isLoggedIn");
+            router.push({ name: "login" });
+        }
+
+        // Fungsi untuk navigasi ke halaman bookmark
+        function gotoBookmark() {
+            router.push({ name: "bookmark" });
+        }
 
         fullscreen.onFullscreenChange((isFs: boolean) => {
             isFullscreen.value = isFs;
@@ -108,7 +137,10 @@ export default defineComponent({
             showSetting,
             showSearchChapters,
             showSidebar,
-            gotoRoute
+            gotoRoute,
+            isLoggedIn,
+            logout,
+            gotoBookmark, // Tambahkan fungsi gotoBookmark
         }
     },
     render() {
@@ -166,19 +198,74 @@ export default defineComponent({
                                     </div>
                                     <div>
                                         <div class="d-flex">
-                                           
-                                            
-                                        <div class={["me-0", styles.nav_menu_item]} onClick={() => this.showSearchChapters = true}>
-    <Tooltip title={this.$t("general.search-surah")}>
-        <font-awesome-icon icon="search" class={styles.icon} />
-    </Tooltip>
-</div>
-<div class={["me-2", styles.nav_menu_item]} onClick={() => this.showSetting = true}>
-    <Tooltip title={this.$t("general.setting")}>
-        <font-awesome-icon icon="gear" class={styles.icon} />
-    </Tooltip>
-</div>
+                                            {/* Tambahkan tombol bookmark di sini */}
+                                            <div
+                                                class={["me-2", styles.nav_menu_item]}
+                                                onClick={this.gotoBookmark}
+                                            >
+                                                <Tooltip title="Bookmark">
+                                                    <font-awesome-icon
+                                                        icon={faBookmark}
+                                                        class={styles.icon}
+                                                    />
+                                                </Tooltip>
+                                            </div>
 
+                                            {this.isLoggedIn ? (
+                                                // Tampilkan tombol Logout jika sudah login
+                                                <div
+                                                    class={["me-2", styles.nav_menu_item]}
+                                                    onClick={this.logout}
+                                                >
+                                                    <Tooltip title="Logout">
+                                                        <font-awesome-icon
+                                                            icon={faSignOutAlt}
+                                                            class={styles.icon}
+                                                        />
+                                                    </Tooltip>
+                                                </div>
+                                            ) : (
+                                                // Tampilkan tombol Login jika belum login
+                                                <>
+                                                    <div
+                                                        class={["me-2", styles.nav_menu_item]}
+                                                        onClick={() => this.gotoRoute("friend")} // Ubah route ke "friend"
+                                                    >
+                                                        <Tooltip title={this.$t("general.friend")}>
+                                                            <font-awesome-icon
+                                                                icon={faUserPlus}
+                                                                class={styles.icon}
+                                                            />
+                                                        </Tooltip>
+                                                    </div>
+                                                    {/* <div
+                                                        class={[
+                                                            "me-0",
+                                                            styles.nav_menu_item,
+                                                            "login-hover",
+                                                        ]}
+                                                        onClick={() => this.gotoRoute("login")}
+                                                    >
+                                                        <Tooltip title={this.$t("general.login")}>
+                                                            <font-awesome-icon
+                                                                icon={faSignInAlt}
+                                                                class={styles.icon}
+                                                            />
+                                                        </Tooltip>
+                                                    </div> */}
+                                                </>
+                                            )}
+                                           
+                                            <div class={["me-0", styles.nav_menu_item]} onClick={() => this.showSearchChapters = true}>
+                                                <Tooltip title={this.$t("general.search-surah")}>
+                                                    <font-awesome-icon icon="search" class={styles.icon} />
+                                                </Tooltip>
+                                            </div>
+                                            <div class={["me-2", styles.nav_menu_item]} onClick={() => this.showSetting = true}>
+                                                <Tooltip title={this.$t("general.setting")}>
+                                                    <font-awesome-icon icon="gear" class={styles.icon} />
+                                                </Tooltip>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -195,7 +282,7 @@ export default defineComponent({
                                                     aria-valuemax="100"
                                                     aria-valuemin="0"
                                                     aria-valuenow={String(this.scrollProgress)}
-                                                    style={`width: ${this.scrollProgress}%`}
+                                                    style={{ width: `${this.scrollProgress}%` }}
                                                 />
                                             </div>
                                         </div>

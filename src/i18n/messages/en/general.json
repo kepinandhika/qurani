@@ -3,6 +3,8 @@
     "language": "Language",
     "fullscreen": "Fullscreen",
     "theme": "Theme",
+    "login": "Login",
+    "friend": "Add Friends",
     "search-surah": "Search surah",
     "search-ayah": "Search ayah",
     "font-size": "Font size",
