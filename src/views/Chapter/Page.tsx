@@ -5,7 +5,7 @@ import { useQuranReader } from "@/hooks/quran-reader";
 import { ChapterInfo, Chapters, Verses, LocaleCode } from "@/types";
 import { UseMemoizeReturn } from "@vueuse/core";
 import sleep from "@/helpers/sleep";
-import Banner from "./Banner";
+import Banner from "./NamaSurah";
 import collect from "collect.js";
 import InfiniteLoading from "v3-infinite-loading";
 import Button from "@/components/Button/Button";

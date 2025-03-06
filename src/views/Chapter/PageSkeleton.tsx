@@ -21,30 +21,6 @@ export default defineComponent({
     render() {
         return (
             <>
-                <Card class="shadow-md bg-primary bg-gradient text-white" headerClasses="text-center border-white">
-                    {{ 
-                        header: () => (
-                            <>
-                                <div class="d-flex justify-content-center mb-2">
-                                    <Skeleton width="200px" height="40px" borderRadius="5px" />
-                                </div>
-                                <div class="d-flex justify-content-center mb-2">
-                                    <Skeleton width="80px" height="20px" borderRadius="5px" />
-                                </div>
-                                <div class="d-flex justify-content-center mb-2">
-                                    <Skeleton width="45px" height="45px" borderRadius="100%" />
-                                </div>
-                            </>
-                        ),
-                        default: () => (
-                            <>
-                                <div class="d-flex justify-content-center">
-                                    <Skeleton width="280px" height="20px" borderRadius="5px" />
-                                </div>
-                            </>
-                        )
-                    }}
-                </Card>
 
                 <div class="row d-flex justify-content-between mb-5 mt-5">
                     <div class="col-6 col-md-4">
