@@ -231,24 +231,24 @@ export default defineComponent({
                     {this.shouldUseButton && (
                         <div class="d-none">
                             <div ref={(ref) => this.refs.popoverContent = (ref as HTMLElement)} class="d-flex">
-                                {this.buttons.includes("bookmark") && this.chapter !== null && (
+                                {this.buttons.includes("Bookmark") && this.chapter !== null && (
                                     <ButtonBookmark
                                         verseKey={this.verseKey}
                                         name={this.chapter.name_simple}
                                     />
                                 )}
-                                {this.buttons.includes("copy") && (
+                                {this.buttons.includes("Copy") && (
                                     <ButtonCopy
                                         text={this.textUthmani}
                                     />
                                 )}
-                                {this.buttons.includes("tafsir") && (
+                                {this.buttons.includes("Tafsir") && (
                                     <ButtonTafsir
                                         chapterId={this.chapterId!}
                                         verseNumber={this.verseNumber!}
                                     />
                                 )}
-                                {this.buttons.includes("play") && (
+                                {this.buttons.includes("Play") && (
                                     <ButtonPlay
                                         chapterId={this.chapterId!}
                                         verseNumber={this.verseNumber!}
