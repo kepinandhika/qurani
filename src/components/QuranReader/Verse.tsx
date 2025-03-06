@@ -57,7 +57,7 @@ export default defineComponent({
         },
         buttons: {
             type: Array as PropType<QuranReader["PROPS_BUTTON"]>,
-            default: () => ["bookmark", "copy", "tafsir", "play"]
+            default: () => ["Bookmark", "Copy", "Tafsir", "Play"]
         }
     },
     setup(props) {
