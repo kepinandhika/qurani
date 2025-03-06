@@ -99,7 +99,7 @@ export default defineComponent({
                                 {this.verseNumber}
                             </span>
                         </div>
-                        {this.buttons.includes("bookmark") && this.chapter !== null && (
+                        {this.buttons.includes("Bookmark") && this.chapter !== null && (
                             <div class="mt-0 mt-md-2 ms-3 ms-md-1 d-flex align-items-center">
                                 <Bookmark
                                     verseKey={this.verseKey}
@@ -107,14 +107,14 @@ export default defineComponent({
                                 />
                             </div>
                         )}
-                        {this.buttons.includes("copy") && (
+                        {this.buttons.includes("Copy") && (
                             <div class="mt-0 mt-md-2 ms-2 ms-md-1 d-flex align-items-center">
                                 <Copy
                                     text={this.textUthmani}
                                 />
                             </div>
                         )}
-                        {this.buttons.includes("tafsir") && (
+                        {this.buttons.includes("Tafsir") && (
                             <div class="mt-0 mt-md-2 ms-2 ms-md-1 d-flex align-items-center">
                                 <Tafsir
                                     chapterId={this.chapterId}
@@ -122,7 +122,7 @@ export default defineComponent({
                                 />
                             </div>
                         )}
-                        {this.buttons.includes("play") && (
+                        {this.buttons.includes("Play") && (
                             <div class="mt-0 mt-md-2 ms-2 ms-md-1 d-flex align-items-center">
                                 <Play
                                     chapterId={this.chapterId}

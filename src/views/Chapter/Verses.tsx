@@ -91,7 +91,7 @@ export default defineComponent({
                     words={verse.words}
                     highlight={verse.highlight}
                     enableHover={true}
-                    buttons={["bookmark", "copy", "play", "tafsir"]}
+                    buttons={["Bookmark", "Copy", "Play", "Tafsir"]}
                     {...attribute}
             />
 
