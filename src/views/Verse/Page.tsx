@@ -57,7 +57,7 @@ export default defineComponent({
                         verseNumber={verse.verse_number}
                         chapterId={props.chapterId}
                         words={verse.words}
-                        buttons={["bookmark", "copy", "tafsir"]}
+                        buttons={["Bookmark", "Copy", "Tafsir"]}
                         {...attribute}
                     />
                 )
