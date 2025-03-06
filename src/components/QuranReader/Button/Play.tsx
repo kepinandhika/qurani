@@ -49,7 +49,7 @@ export default defineComponent({
     render() {
         return (
             <>
-                <Tooltip tag="div" title={this.$t("audio-player.play").toLowerCase()}>
+                <Tooltip tag="div" title={this.$t("audio-player.play")}>
                     <Button
                         type="transparent"
                         class={styles.button}

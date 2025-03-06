@@ -33,7 +33,7 @@ export default defineComponent({
     render() {
         return (
             <>
-                <Tooltip tag="div" title={this.$t("general.copy").toLowerCase()}>
+                <Tooltip tag="div" title={this.$t("general.copy")}>
                     <Button
                         type="transparent"
                         class={styles.button}

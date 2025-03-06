@@ -31,7 +31,7 @@ export default defineComponent({
     render() {
         return (
             <>
-                <Tooltip tag="div" title={this.$t("general.tafsir").toLowerCase()}>
+                <Tooltip tag="div" title={this.$t("general.tafsir")}>
                     <Button
                         type="transparent"
                         class={styles.button}

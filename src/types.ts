@@ -108,10 +108,10 @@ export type TafsirsData = {
 }
 
 enum PropsButton {
-    "bookmark",
-    "copy",
-    "tafsir",
-    "play"
+    "Bookmark",
+    "Copy",
+    "Tafsir",
+    "Play"
 }
 
 interface AudioTimestamp {

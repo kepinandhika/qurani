@@ -48,7 +48,7 @@ export default defineComponent({
     render() {
         return (
             <>
-                <Tooltip tag="div" title={this.$t("general.bookmark").toLowerCase()}>
+                <Tooltip tag="div" title={this.$t("general.bookmark")}>
                     <Button
                         type="transparent"
                         class={styles.button}
