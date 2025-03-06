@@ -237,18 +237,18 @@ export default defineComponent({
                                         name={this.chapter.name_simple}
                                     />
                                 )}
-                                {this.buttons.includes("Copy") && (
+                                {this.buttons.includes("copy") && (
                                     <ButtonCopy
                                         text={this.textUthmani}
                                     />
                                 )}
-                                {this.buttons.includes("Tafsir") && (
+                                {this.buttons.includes("tafsir") && (
                                     <ButtonTafsir
                                         chapterId={this.chapterId!}
                                         verseNumber={this.verseNumber!}
                                     />
                                 )}
-                                {this.buttons.includes("Play") && (
+                                {this.buttons.includes("play") && (
                                     <ButtonPlay
                                         chapterId={this.chapterId!}
                                         verseNumber={this.verseNumber!}
