@@ -47,7 +47,7 @@ export default defineComponent({
                         words={verse.words}
                         translations={verse.translations}
                         showFooter={false}
-                        buttons={["bookmark", "copy", "tafsir"]}
+                        buttons={["Bookmark", "Copy", "Tafsir"]}
                         {...attribute}
                     />
                 )
