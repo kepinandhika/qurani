@@ -6,21 +6,21 @@ img.img-fluid {
 
 @media (max-width: 768px) { /* Tablet dan lebih kecil */
     img.img-fluid {
-        max-width: 40%;
+        max-width: 60%;
         margin-top: 1rem;
     }
 }
 
 @media (max-width: 576px) { /* Mobile */
     img.img-fluid {
-        max-width: 40%;
+        max-width: 60%;
         margin-top: 1rem;
     }
 }
 
 @media (max-width: 400px) { /* Mobile kecil */
     img.img-fluid {
-        max-width: 25%;
+        max-width: 50%;
         margin-top: 1rem;
     }
 }
