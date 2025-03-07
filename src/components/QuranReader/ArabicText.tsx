@@ -1,4 +1,6 @@
+
 import { Chapters, QuranReader, Words } from "@/types";
+//import "bootstrap/dist/css/bootstrap.min.css";
 import { defineComponent, PropType, ref, watch, nextTick, onBeforeUnmount, VNode, computed, Teleport } from "vue";
 import { Tooltip as BSTooltip, Popover as BSPopover } from "bootstrap";
 import { useI18n } from "vue-i18n";
@@ -10,6 +12,7 @@ import ButtonTafsir from "./Button/Tafsir";
 import ButtonPlay from "./Button/Play";
 import Popover from "../Popover/Popover";
 import styles from "./ArabicText.module.scss";
+import AlertDialog from "../AlertDialog/AlertDialog";
 
 export default defineComponent({
     props: {
@@ -54,8 +57,9 @@ export default defineComponent({
         buttons: {
             type: Array as PropType<QuranReader["PROPS_BUTTON"]>,
             default: () => []
-        }
+        },
     },
+    
     setup(props) {
         const trans = useI18n();
         const chapters = useChapters();
@@ -63,6 +67,8 @@ export default defineComponent({
         const popoverInstance =  ref<Record<number, BSPopover>>({});
         const popover = ref<BSPopover | null>(null);
         const isHover = ref<boolean>(false);
+        const isModalVisible = ref<boolean>(false);
+        const modalContent = ref<string>("");
         const refs = ref<{ popoverContent: HTMLElement | null }>({
             popoverContent: null
         });
@@ -82,6 +88,9 @@ export default defineComponent({
         const shouldUseButton = computed<boolean>(() => {
             return props.buttons.length > 0 && props.chapterId !== undefined && props.verseNumber !== undefined
         });
+
+        const correctionTarget = ref<'ayat' | 'kata'>('kata'); // default ke 'kata'
+
 
         function isHighlightWord(position: number) {
             return (props.highlight === position);
@@ -113,6 +122,31 @@ export default defineComponent({
             }
         }
 
+        //function untuk salah ayat / Kata
+        function showWrongWordModal(word: any, isVerseEnd = false) {
+            correctionTarget.value = isVerseEnd ? 'ayat' : 'kata';
+        
+            modalContent.value = isVerseEnd
+                ? `Menandai ayat ${props.verseNumber} dari surat ${chapter.value?.name_simple}`
+                : `Menandai Kata ${word.text_uthmani} ayat ${props.verseNumber} dari surat ${chapter.value?.name_simple}`;
+        
+            isModalVisible.value = true;
+        }
+        
+
+        function handleVerseClick() {
+            if (props.chapterId && props.verseNumber) {
+                modalContent.value = `Anda mengklik seluruh ayat ${props.verseNumber} dari surat ${props.chapterId}`;
+                isModalVisible.value = true;
+            }
+        }
+        
+
+        function closeModal() {
+            isModalVisible.value = false;
+        }
+        
+        
         function onMouseOver(key: number) {
             isHover.value = true;
             if (!props.showTooltipWhenHighlight || !isHighlightWord(key)) {
@@ -126,27 +160,6 @@ export default defineComponent({
                 tooltipInstance.value[key]?.hide();
             }
         }
-        
-        
-
-        // function getTooltipText(word: Words) {
-        //     let text: string = "";
-
-        //     if (props.showTranslationTooltip) {
-        //         text+= `<div>${word.char_type_name == "end" ? trans.t("quran-reader.word-number", {ayah: word.translation.text.match(/[0-9]+/)?.[0]}).toLowerCase() : word.translation.text}</div>`;
-        //     }
-
-        //     if (props.showTranslationTooltip && props.showTransliterationTooltip) {
-        //         text+= "<div class='border-top mt-1 mb-1'></div>";
-        //     }
-
-        //     if (props.showTransliterationTooltip) {
-        //         text+= `<div>${word.char_type_name == "end" ? word.translation.text : word.transliteration.text}</div>`;
-        //     }
-
-        //     return text
-        // }
-
         function wordWrapper(word: Words, children: VNode) {
             if (!shouldUseButton.value) {
                 return (
@@ -202,6 +215,7 @@ export default defineComponent({
             Object.keys(tooltipInstance.value).forEach((key) => tooltipInstance.value[Number(key)]?.hide());
             Object.keys(popoverInstance.value).forEach((key) => popoverInstance.value[Number(key)]?.hide())
         });
+        
 
         return {
             tooltipInstance,
@@ -220,15 +234,54 @@ export default defineComponent({
             onMouseOver,
             onMouseLeave,
             wordWrapper,
+            showWrongWordModal,
+            handleVerseClick,
+            modalContent,
+            isModalVisible,
+            AlertDialog,
+            closeModal,
+            correctionTarget
+            
         }
     },
     render() {
         return (
             <>
+                <Teleport to="body">
+                    {this.isModalVisible && (
+                        <div class="modal fade show d-block" tabindex="-1" style={{ background: "rgba(0, 0, 0, 0.5)" }}>
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">{this.modalContent}</h5>
+                                        <button type="button" class="btn-close" onClick={this.closeModal}></button>
+                                    </div>
+                                    <div class="modal-body">
+                                       {this.correctionTarget === 'kata' ? (
+                                        <>
+                                            <button class="w-100 mb-2 btn btn-danger" onClick={this.closeModal} style={{ borderWidth: "2px", fontWeight: "500", textAlign: "left" }}>Salah Tajwid</button>
+                                            <button class="btn btn-warning w-100 mb-2" onClick={this.closeModal} style={{ borderWidth: "2px", fontWeight: "500", textAlign: "left" }}>Salah Panjang Pendek</button>
+                                            <button class="btn btn-info w-100 mb-2" onClick={this.closeModal} style={{ borderWidth: "2px", fontWeight: "500", textAlign: "left" }}>Salah Huruf</button>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <button class="w-100 mb-2 btn btn-danger" onClick={this.closeModal} style={{ borderWidth: "2px", fontWeight: "500", textAlign: "left" }}>Ayat Tidak Dibaca</button>
+                                            <button class="btn btn-warning w-100 mb-2" onClick={this.closeModal} style={{ borderWidth: "2px", fontWeight: "500", textAlign: "left" }}>Ayat</button>
+                                            <button class="btn btn-info w-100 mb-2" onClick={this.closeModal} style={{ borderWidth: "2px", fontWeight: "500", textAlign: "left" }}>Salah Susunan Ayat</button>
+                                        </>
+                                    )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </Teleport>
                 <span dir="rtl" class={[styles.arabic_text, {
                     [styles.highlight]: this.highlight === true,
                     [styles.hover]: this.isHover && this.enableHover
-                }]}>
+                }]}
+                onClick={() => this.handleVerseClick()}
+                >
                     {/*MAIN MAIN*/}
                     {this.shouldUseButton && (
                         <div class="d-none">
@@ -263,7 +316,7 @@ export default defineComponent({
                         <Tooltip
                             key={`tooltip-${word.id}`}
                             tag="div"
-                            timeout={0}
+                            timeout={0} 
                             options={{
                                 trigger: "manual",
                                 html: true,
@@ -281,11 +334,19 @@ export default defineComponent({
                                     "data-word-location": word.location,
                                     "data-word-type": word.char_type_name,
                                     "onmouseover": () => this.onMouseOver(word.position),
-                                    "onmouseleave": () => this.onMouseLeave(word.position)
+                                    "onmouseleave": () => this.onMouseLeave(word.position),
+                                    "onclick": () => this.showWrongWordModal(word, word.char_type_name == "end")
                                 }
                             }
                         >
-                            <div class={["fs-arabic-auto text-center", {
+                            <div
+                             onClick={(e) =>
+                                {
+                                    e.stopPropagation();
+                                    console.log("Kata diklik:", word.text_uthmani);
+                                    this.showWrongWordModal(word, word.char_type_name == "end") //ini Untuk ayat
+                                }}
+                              class={["fs-arabic-auto text-center", {
                                 "font-uthmanic": word.char_type_name == "end",
                                 "font-arabic-auto": word.char_type_name == "word"
                             }]}>
@@ -307,4 +368,6 @@ export default defineComponent({
             </>
         )
     }
-})
+}) 
+
+
