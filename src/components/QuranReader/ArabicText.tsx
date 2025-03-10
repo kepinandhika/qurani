@@ -135,6 +135,8 @@ export default defineComponent({
                 }
             };
         }
+
+        
     
         function onInitPopover(key: number) {
             return function (popover: BSPopover) {
@@ -165,6 +167,24 @@ export default defineComponent({
             }
             return {};
         }
+
+          function handleKeydown(e: KeyboardEvent) {
+            if (e.key === "Escape") {
+              closeModal();
+            }
+          }
+        
+          onMounted(() => {
+            window.addEventListener("keydown", handleKeydown);
+          });
+        
+          onBeforeUnmount(() => {
+            window.removeEventListener("keydown", handleKeydown);
+            isHover.value = false;
+            Object.keys(tooltipInstance.value).forEach((key) => tooltipInstance.value[Number(key)]?.hide());
+            Object.keys(popoverInstance.value).forEach((key) => popoverInstance.value[Number(key)]?.hide());
+          });
+        
     
         function markError(word: Words | null, errorType: string) {
             if (word) {
