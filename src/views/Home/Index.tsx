@@ -180,34 +180,48 @@ export default defineComponent({
           )}
         </div>
         {this.tab === "halaman" && (
-          <div class="mb-4">
-            <div class="input-group">
-              <input
-                type="number"
-                class="form-control"
-                placeholder={this.t("general.nohalaman")}
-                // Menggunakan properti value dan onInput untuk TSX
-                value={this.halamanInput}
-                min="1"
-                onInput={(e: Event) => {
-                  this.halamanInput = (e.target as HTMLInputElement).value;
-                }}
-                onKeyup={(e: KeyboardEvent) => {
-                  if (e.key === "Enter") {
-                    this.navigateToSurah();
-                  }
-                }}
-              />
-              <button
-                class="btn btn-primary"
-                disabled={!this.isInputFilled}
-                onClick={this.navigateToSurah}
-              >
-                {this.t("general.gopage")}
-              </button>
-            </div>
-          </div>
-        )}
+  <div class="mb-4">
+    <div class="input-group" style="max-width: 350px;">
+      <input
+        type="number"
+        class="form-control"
+        placeholder={this.t("general.nohalaman")}
+        value={this.halamanInput}
+        min="1"
+        max="604"
+        // Lebar input disesuaikan untuk 3 digit
+        style="width: 3ch;"
+        onInput={(e: Event) => {
+          let inputVal = (e.target as HTMLInputElement).value;
+          // Menghapus karakter non-digit (meskipun type="number" sudah mencegah, untuk jaga-jaga)
+          inputVal = inputVal.replace(/\D/g, "");
+          // Batasi input hingga 3 digit
+          if (inputVal.length > 3) {
+            inputVal = inputVal.slice(0, 3);
+          }
+          // Jika nilai melebihi 604, set menjadi "604"
+          const num = parseInt(inputVal, 10);
+          if (!isNaN(num) && num > 604) {
+            inputVal = "604";
+          }
+          this.halamanInput = inputVal;
+        }}
+        onKeyup={(e: KeyboardEvent) => {
+          if (e.key === "Enter") {
+            this.navigateToSurah();
+          }
+        }}
+        />
+        <button
+          class="btn btn-primary"
+          disabled={!this.isInputFilled}
+          onClick={this.navigateToSurah}
+        >
+          {this.t("general.gopage")}
+        </button>
+      </div>
+    </div>
+  )}
         {this.tab === "surah"
           ? h(Surah, { sort: this.sort })
           : this.tab === "juz"

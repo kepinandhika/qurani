@@ -61,7 +61,10 @@ export default defineComponent({
                 }}
             >
                 {this.shouldShow && (
-                    <div class={styles.container} onClick={((e: Event) => {
+                    <div 
+                    class={styles.container} 
+                    style="z-index: 2147483647;"  // Menetapkan z-index maksimum
+                    onClick={((e: Event) => {
                         if ((e.target as HTMLElement).classList.contains(styles.card_container)) {
                             this.shouldShow = false
                         }

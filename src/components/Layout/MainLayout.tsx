@@ -52,7 +52,7 @@ export default defineComponent({
 
         // Ref untuk mengatur visibilitas navbar berdasarkan aktivitas scroll
         const showNavbar = ref<boolean>(true);
-        let hideNavbarTimeout: number | null = null;
+        
 
         // Cek status login saat komponen dimount
         onMounted(() => {
@@ -87,7 +87,7 @@ export default defineComponent({
             }
         });
 
-        let oldScroll: number = 0;
+       
 
         function handleScroll() {
             if (props.showScrollIndicator) {
@@ -103,37 +103,16 @@ export default defineComponent({
                 scrollProgress.value = width;
             }
 
-            if (props.fixed) {
-                if (oldScroll - window.scrollY < 0) {
-                    navbar.value?.classList.add(styles.navbar_minimize);
-                    document.body.setAttribute("data-navbar-minimize", "true");
-                } else {
-                    navbar.value?.classList.remove(styles.navbar_minimize);
-                    document.body.removeAttribute("data-navbar-minimize");
-                }
-            }
+           
 
-            // Tampilkan navbar saat scroll dan set timer untuk menyembunyikannya jika tidak ada aktivitas scroll selama 5 detik
-            if (hideNavbarTimeout !== null) {
-                clearTimeout(hideNavbarTimeout);
-            }
-            showNavbar.value = true;
-            hideNavbarTimeout = window.setTimeout(() => {
-                showNavbar.value = false;
-            }, 10000000);
-
-            oldScroll = window.scrollY;
+          
         }
 
         onMounted(() => {
             useEventListener(window, "scroll", handleScroll);
         });
 
-        onBeforeUnmount(() => {
-            if (hideNavbarTimeout !== null) {
-                clearTimeout(hideNavbarTimeout);
-            }
-        });
+       
 
         watch(showSidebar, (isShown) => {
             if (isShown) {
@@ -248,12 +227,9 @@ export default defineComponent({
                                                 ) : (
                                                     // Tombol Login jika belum login
                                                     <div
-                                                        class={["me-0", styles.nav_menu_item]}
-                                                        onClick={() => this.$router.push('/login')}
+                                                      
                                                     >
-                                                        <Tooltip title="Login">
-                                                            <font-awesome-icon icon="user" class={styles.icon} />
-                                                        </Tooltip>
+                                                       
                                                     </div>
                                                 )}
                                                 <div class={["me-0", styles.nav_menu_item]} onClick={() => this.showSearchChapters = true}>

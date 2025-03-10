@@ -50,7 +50,7 @@ $arabic-font-size: (
 .font-uthmanic {
     font-family: "Uthmanic Hafs" !important;
 }
-.font-nastaleeq {
+.font-Default {
     font-family: "Nastaleeq" !important;
 }
 .font-alqalam {
@@ -63,8 +63,8 @@ $arabic-font-size: (
 html[arabic-font=uthmanic] .font-arabic-auto {
     @extend .font-uthmanic;
 }
-html[arabic-font=nastaleeq] .font-arabic-auto {
-    @extend .font-nastaleeq;
+html[arabic-font=Default] .font-arabic-auto {
+    @extend .font-Default;
 }
 html[arabic-font=alqalam] .font-arabic-auto {
     @extend .font-alqalam;

@@ -8,7 +8,7 @@ import { LocaleCode } from "@/types";
 import copy from "@/helpers/copy";
 
 export type Locale = "en" | "id";
-export type FontType = "nastaleeq" | "uthmanic" | "me-quran" | "alqalam";
+export type FontType =  "Default" | "Uthmanic";
 export type FontSize = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10
 export type Scale = 0.3 | 0.4 | 0.5 | 0.6 | 0.7 | 0.8 | 0.9 | 1
 export type Theme = "auto" | "light" | "dark";
@@ -61,10 +61,9 @@ export const config: Config = {
         "dark"
     ],
     FONTS: [
-        "nastaleeq",
-        "uthmanic",
-        "me-quran",
-        "alqalam"
+      
+        "Default",
+        "Uthmanic"
     ],
     LOCALE: {
         id: "Indonesia",
@@ -74,7 +73,7 @@ export const config: Config = {
         locale: "id",
         theme: "auto",
         font_size: 5,
-        font_type: "uthmanic",
+        font_type: "Default",
         scale:  0.8,
         transliteration: false,
         translation: true,
