@@ -351,10 +351,10 @@ export default defineComponent({
               </>
             ) : (
               <>
-                <button class="w-100 mb-2 btn" onClick={() => this.markError(this.selectedVerse, 'Ayat Lupa (tidak dibaca)')} style={{ backgroundColor: "#FA7656", borderWidth: "2px", fontWeight: "500" }}>Ayat Lupa (tidak dibaca)</button>
-                <button class="w-100 mb-2 btn" onClick={() => this.markError(this.selectedVerse, "Ayat Waqof atau Washol (berhenti atau lanjut)")} style={{ backgroundColor:'#FE7D8F', borderWidth: "2px", fontWeight: "500" }}>Ayat Waqof atau Washol (berhenti atau lanjut)</button>
-                <button class="w-100 mb-2 btn" onClick={() => this.markError(this.selectedVerse, 'Ayat Waqof dan Ibtida (berhenti dan memulai)')} style={{ backgroundColor: "#90CBAA", borderWidth: "2px", fontWeight: "500" }}>Ayat Waqof dan Ibtida (berhenti dan memulai)</button>
-                <button class="w-100 mb-2 btn" onClick={() => this.markError(this.selectedVerse, 'Ayat Lainnya')} style={{ backgroundColor: "#CC99CC", borderWidth: "2px", fontWeight: "500" }}>Ayat Lainnya</button>
+                <button class="w-100 mb-2 btn" onClick={() => this.markError(this.selectedWord, 'Ayat Lupa (tidak dibaca)')} style={{ backgroundColor: "#FA7656", borderWidth: "2px", fontWeight: "500" }}>Ayat Lupa (tidak dibaca)</button>
+                <button class="w-100 mb-2 btn" onClick={() => this.markError(this.selectedWord, "Ayat Waqof atau Washol (berhenti atau lanjut)")} style={{ backgroundColor:'#FE7D8F', borderWidth: "2px", fontWeight: "500" }}>Ayat Waqof atau Washol (berhenti atau lanjut)</button>
+                <button class="w-100 mb-2 btn" onClick={() => this.markError(this.selectedWord, 'Ayat Waqof dan Ibtida (berhenti dan memulai)')} style={{ backgroundColor: "#90CBAA", borderWidth: "2px", fontWeight: "500" }}>Ayat Waqof dan Ibtida (berhenti dan memulai)</button>
+                <button class="w-100 mb-2 btn" onClick={() => this.markError(this.selectedWord, 'Ayat Lainnya')} style={{ backgroundColor: "#CC99CC", borderWidth: "2px", fontWeight: "500" }}>Ayat Lainnya</button>
               </>
             )}
           </div>
