@@ -245,17 +245,16 @@ export default defineComponent({
                                                             />
                                                         </Tooltip>
                                                     </div>
-                                                    
                                                 ) : (
-                                                    // Tombol Login jika belum login (atau tombol friend sesuai route "friend")
-                                                    <>
-                                                        <div
-                                                            
-                                                            onClick={() => this.gotoRoute("friend")}
-                                                        >
-                                                        
-                                                        </div>
-                                                    </>
+                                                    // Tombol Login jika belum login
+                                                    <div
+                                                        class={["me-0", styles.nav_menu_item]}
+                                                        onClick={() => this.$router.push('/login')}
+                                                    >
+                                                        <Tooltip title="Login">
+                                                            <font-awesome-icon icon="user" class={styles.icon} />
+                                                        </Tooltip>
+                                                    </div>
                                                 )}
                                                 <div class={["me-0", styles.nav_menu_item]} onClick={() => this.showSearchChapters = true}>
                                                     <Tooltip title={this.$t("general.search-surah")}>

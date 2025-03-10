@@ -63,6 +63,22 @@ const routes: RouteRecordRaw[] = [
             title: "Bookmark"
         }
     },
+        {
+        path: "/login",
+        name: "login",
+        component: () => import("@/views/Auth/Login"),
+        meta: {
+            title: "Login"
+        }
+    },
+        {
+        path: "/register",
+        name: "register",
+        component: () => import("@/views/Auth/Register"),
+        meta: {
+            title: "Register"
+        }
+    },
     {
         path: "/:catchAll(.*)",
         component: () => import("@/views/Error/PageNotFound"),
