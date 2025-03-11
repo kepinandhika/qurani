@@ -182,36 +182,39 @@ export default defineComponent({
         {this.tab === "halaman" && (
   <div class="mb-4">
     <div class="input-group" style="max-width: 350px;">
-      <input
-        type="number"
-        class="form-control"
-        placeholder={this.t("general.nohalaman")}
-        value={this.halamanInput}
-        min="1"
-        max="604"
-        // Lebar input disesuaikan untuk 3 digit
-        style="width: 3ch;"
-        onInput={(e: Event) => {
-          let inputVal = (e.target as HTMLInputElement).value;
-          // Menghapus karakter non-digit (meskipun type="number" sudah mencegah, untuk jaga-jaga)
-          inputVal = inputVal.replace(/\D/g, "");
-          // Batasi input hingga 3 digit
-          if (inputVal.length > 3) {
-            inputVal = inputVal.slice(0, 3);
-          }
-          // Jika nilai melebihi 604, set menjadi "604"
-          const num = parseInt(inputVal, 10);
-          if (!isNaN(num) && num > 604) {
-            inputVal = "604";
-          }
-          this.halamanInput = inputVal;
-        }}
-        onKeyup={(e: KeyboardEvent) => {
-          if (e.key === "Enter") {
-            this.navigateToSurah();
-          }
-        }}
-        />
+    <input
+  type="number"
+  class="form-control"
+  placeholder={this.t("general.nohalaman")}
+  value={this.halamanInput}
+  min="1"
+  max="604"
+  style="width: 3ch;"
+  onInput={(e: Event) => {
+    const inputEl = e.target as HTMLInputElement;
+    let inputVal = inputEl.value;
+    // Hapus karakter non-digit
+    inputVal = inputVal.replace(/\D/g, "");
+    // Jika lebih dari 3 digit, batasi dengan mengambil 3 digit pertama
+    if (inputVal.length > 3) {
+      inputVal = inputVal.slice(0, 3);
+      // Optional: langsung perbarui nilai pada input
+      inputEl.value = inputVal;
+    }
+    // Jika nilainya lebih dari 604, set menjadi "604"
+    const num = parseInt(inputVal, 10);
+    if (!isNaN(num) && num > 604) {
+      inputVal = "604";
+      inputEl.value = inputVal;
+    }
+    this.halamanInput = inputVal;
+  }}
+  onKeyup={(e: KeyboardEvent) => {
+    if (e.key === "Enter") {
+      this.navigateToSurah();
+    }
+  }}
+/>
         <button
           class="btn btn-primary"
           disabled={!this.isInputFilled}
