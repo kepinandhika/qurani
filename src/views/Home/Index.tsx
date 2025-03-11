@@ -425,37 +425,37 @@ export default defineComponent({
                 <div class="card-title my-auto d-flex flex-wrap gap-2 justify-center">
                   <router-link
                     to="/surah/36"
-                    class="px-2 py-1 bg-warning rounded text-white rounded-md text-sm sm:text-base"
+                    class="px-2 py-1 bg-warning rounded text-dark rounded-md text-sm sm:text-base"
                   >
                     Yasin
                   </router-link>
                   <router-link
                     to="/surah/67"
-                    class="px-2 py-1 bg-success rounded text-white rounded-md text-sm sm:text-base"
+                    class="px-2 py-1 bg-success rounded text-dark rounded-md text-sm sm:text-base"
                   >
                     Al-Mulk
                   </router-link>
                   <router-link
                     to="/surah/56"
-                    class="px-2 py-1 bg-success rounded text-white rounded-md text-sm sm:text-base"
+                    class="px-2 py-1 bg-success rounded text-dark rounded-md text-sm sm:text-base"
                   >
                     Al-Waqi'ah
                   </router-link>
                   <router-link
                     to="/surah/18"
-                    class="px-2 py-1 bg-success rounded text-white rounded-md text-sm sm:text-base"
+                    class="px-2 py-1 bg-success rounded text-dark rounded-md text-sm sm:text-base"
                   >
                     Al-Kahf
                   </router-link>
                   <router-link
                     to="/surah/78"
-                    class="px-2 py-1 bg-success rounded text-white rounded-md text-sm sm:text-base"
+                    class="px-2 py-1 bg-success rounded text-dark rounded-md text-sm sm:text-base"
                   >
                     An-Naba
                   </router-link>
                   <router-link
                     to="/surah/2"
-                    class="px-2 py-1 bg-success rounded text-white rounded-md text-sm sm:text-base"
+                    class="px-2 py-1 bg-success rounded text-dark rounded-md text-sm sm:text-base"
                   >
                     Al-Baqarah
                   </router-link>
