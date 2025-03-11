@@ -31,7 +31,6 @@ export default defineComponent({
         function isSupportScale() {
             const touchDevice = (navigator.maxTouchPoints || "ontouchstart" in document.documentElement);
             const mobile = /iPhone|iPad|iPod|Android|webOS/i.test(navigator.userAgent);
-
             return Boolean(touchDevice && mobile);
         }
 
@@ -41,7 +40,7 @@ export default defineComponent({
 
         watch(shouldShow, (show) => {
             show ? scroll.disable() : scroll.enable();
-        }, {immediate: true})
+        }, { immediate: true });
 
         return {
             shouldShow,
@@ -62,13 +61,13 @@ export default defineComponent({
             >
                 {this.shouldShow && (
                     <div 
-                    class={styles.container} 
-                    style="z-index: 2147483647;"  // Menetapkan z-index maksimum
-                    onClick={((e: Event) => {
-                        if ((e.target as HTMLElement).classList.contains(styles.card_container)) {
-                            this.shouldShow = false
-                        }
-                    })}>
+                        class={styles.container} 
+                        style="z-index: 2147483647;"  
+                        onClick={(e: Event) => {
+                            if ((e.target as HTMLElement).classList.contains(styles.card_container)) {
+                                this.shouldShow = false
+                            }
+                        }}>
                         <div class={styles.card_container}>
                             <div class={["card", styles.card]}>
                                 <div class={["card-header d-flex justify-content-between", styles.card_header]}>
@@ -104,21 +103,23 @@ export default defineComponent({
                                             />
                                         </>
                                     )}
-                                        
-                                    {/* language */}
+
+                                    {/* language select */}
                                     <h6 class="heading-small">{this.$t("general.language")}</h6>
-                                    <nav class="nav nav-pills custom-nav-pills mb-2">
+                                    <select 
+                                        class="form-select mb-2"
+                                        value={this.$setting.locale}
+                                        onInput={(e: Event) => this.$setting.locale = (e.target as HTMLSelectElement).value as LocaleCode}
+                                    >
                                         {Object.keys(this.$config.LOCALE).map(locale => (
-                                            <div
-                                                key={locale}
-                                                class={["nav-link", {active: locale == this.$setting.locale}]}
-                                                onClick={() => this.$setting.locale = locale as LocaleCode}
-                                            >
+                                            <option key={locale} value={locale}>
                                                 {(this.$config.LOCALE as any)[locale]}
-                                            </div>
+                                            </option>
                                         ))}
-                                    </nav>
+                                    </select>
+
                                     <hr />
+
                                     <h6 class="heading-small">{this.$t("general.theme")}</h6>
                                     <nav class="nav nav-pills custom-nav-pills mb-2">
                                         {this.$config.THEMES.map(theme => (
@@ -138,18 +139,21 @@ export default defineComponent({
                                         </small>
                                     )}
                                     <hr />
+
+                                    {/* quran-font select */}
                                     <h6 class="heading-small">{this.$t("general.quran-font")}</h6>
-                                    <nav class="nav nav-pills custom-nav-pills mb-2">
+                                    <select 
+                                        class="form-select mb-2"
+                                        value={this.$setting.fontType}
+                                        onInput={(e: Event) => this.$setting.fontType = (e.target as HTMLSelectElement).value}
+                                    >
                                         {this.$config.FONTS.map(font => (
-                                            <div
-                                                key={font}
-                                                class={["nav-link", {active: this.$setting.fontType == font}]}
-                                                onClick={() => this.$setting.fontType = font}
-                                            >
+                                            <option key={font} value={font}>
                                                 {font}
-                                            </div>
+                                            </option>
                                         ))}
-                                    </nav>
+                                    </select>
+
                                     <div class="d-flex justify-content-between mt-3">
                                         <div class="h-100">
                                             <h6 class="heading-small mt-2">{this.$t("general.font-size")}</h6>
@@ -210,7 +214,6 @@ export default defineComponent({
                                                         v-model={this.$setting.translationDisplay.inline}
                                                         disabled={!this.$setting.translation}
                                                     />
-                                                   
                                                 </div>
                                             </div>
                                         </div>

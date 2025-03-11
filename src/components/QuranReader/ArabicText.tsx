@@ -119,6 +119,7 @@ export default defineComponent({
             'Ayat Waqof dan Ibtida (berhenti dan memulai)': '#90CBAA',
             'LainNya': '#CC99CC',
         };
+        
     
         function isHighlightWord(position: number) {
             return (props.highlight === position);
@@ -173,11 +174,11 @@ export default defineComponent({
         }
     
         function getWordStyle(word: Words) {
-            const error = markedErrors.value.find(err => 
-                (err.isVerseError && err.verseNumber === props.verseNumber) || 
+            const error = markedErrors.value.find(err =>
+                (err.isVerseError && err.verseNumber === props.verseNumber) ||
                 (!err.isVerseError && err.word?.text_uthmani === word.text_uthmani)
             );
-            if (error && error.errorType in errorColors) {
+            if (error && error.errorType in errorColors && !error.isVerseError) {
                 return { backgroundColor: errorColors[error.errorType] };
             }
             return {};
@@ -315,7 +316,18 @@ export default defineComponent({
                 tooltipInstance.value[props.highlight]?.[value ? "show" : "hide"]();
             }
         });
-    
+        function getVerseErrorStyle() {
+            const verseError = markedErrors.value.find(err =>
+              err.isVerseError && err.verseNumber === props.verseNumber
+            );
+            if (verseError && verseError.errorType in errorColors) {
+              return {
+                backgroundColor: errorColors[verseError.errorType],
+                padding: '14px',
+              };
+            }
+            return {};
+          }
         return {
             tooltipInstance,
             popoverInstance,
@@ -347,19 +359,19 @@ export default defineComponent({
             getWordStyle,
             markError,
             removeMarkedError,
+            getVerseErrorStyle
         };
     },
     render() {
         return (
             <>
                 <Teleport to="body">
+                    {/* Modal untuk menandai kesalahan */}
                     {this.isModalVisible && (
                         <div
                             class="modal fade show d-block"
                             tabindex="-1"
-                            style={{ background: "rgba(0, 0, 0, 0.5)" , 
-                                // zIndex: "2147483647" 
-                            }}
+                            style={{ background: "rgba(0, 0, 0, 0.5)" }}
                             onClick={this.closeModal}
                         >
                             <div
@@ -378,7 +390,7 @@ export default defineComponent({
                                         ) ? (
                                             // Jika sudah diblok, tampilkan tombol "Hapus Tanda"
                                             <button 
-                                                class="w-100 mb-2 btn btn-danger text-start"  
+                                                class="w-100 mb-2 btn btn-danger" 
                                                 onClick={() => this.removeMarkedError(this.selectedWord, this.correctionTarget === 'ayat')}
                                             >
                                                 Hapus Tanda
@@ -403,11 +415,12 @@ export default defineComponent({
                                                     <button class="w-100 mb-2 btn" onClick={() => this.markError(this.selectedWord, 'Lainnya')} style={{ backgroundColor: "#CC99CC", borderWidth: "2px", fontWeight: "500",textAlign: "left",color: "#000000" }}>Lainnya</button>
                                                 </>
                                             ) : (
-                                            <>
-                                                <button class="w-100 mb-2 btn" onClick={() => this.markError(null, 'Ayat Lupa (tidak dibaca)', true)} style={{ backgroundColor: "#FA7656", borderWidth: "2px", fontWeight: "500",textAlign: "left",color: "#000000" }}>Ayat Lupa (tidak dibaca)</button>
-                                                <button class="w-100 mb-2 btn" onClick={() => this.markError(null, 'Ayat Waqof atau Washol (berhenti atau lanjut)', true)} style={{ backgroundColor: "#FE7D8F", borderWidth: "2px", fontWeight: "500",textAlign: "left",color: "#000000" }}>Ayat Waqof atau Washol (berhenti atau lanjut)</button>
-                                                <button class="w-100 mb-2 btn" onClick={() => this.markError(null, 'Ayat Waqof dan Ibtida (berhenti dan memulai)', true)} style={{ backgroundColor: "#90CBAA", borderWidth: "2px", fontWeight: "500",textAlign: "left",color: "#000000" }}>Ayat Waqof dan Ibtida (berhenti dan memulai)</button>
-                                                <button class="w-100 mb-2 btn" onClick={() => this.markError(null, 'LainNya', true)} style={{ backgroundColor: "#CC99CC", borderWidth: "2px", fontWeight: "500",textAlign: "left",color: "#000000" }}>Lainnya</button>  
+                                                <>
+                                                    {/* Tombol untuk menandai ayat */}
+                                                    <button class="w-100 mb-2 btn" onClick={() => this.markError(null, 'Ayat Lupa (tidak dibaca)', true)} style={{ backgroundColor: "#FA7656", borderWidth: "2px", fontWeight: "500",textAlign: "left",color: "#000000" }}>Ayat Lupa (tidak dibaca)</button>
+                                                    <button class="w-100 mb-2 btn" onClick={() => this.markError(null, 'Ayat Waqof atau Washol (berhenti atau lanjut)', true)} style={{ backgroundColor: "#FE7D8F", borderWidth: "2px", fontWeight: "500",textAlign: "left",color: "#000000" }}>Ayat Waqof atau Washol (berhenti atau lanjut)</button>
+                                                    <button class="w-100 mb-2 btn" onClick={() => this.markError(null, 'Ayat Waqof dan Ibtida (berhenti dan memulai)', true)} style={{ backgroundColor: "#90CBAA", borderWidth: "2px", fontWeight: "500",textAlign: "left",color: "#000000" }}>Ayat Waqof dan Ibtida (berhenti dan memulai)</button>
+                                                    <button class="w-100 mb-2 btn" onClick={() => this.markError(null, 'LainNya', true)} style={{ backgroundColor: "#CC99CC", borderWidth: "2px", fontWeight: "500",textAlign: "left",color: "#000000" }}>Lainnya</button>  
                                                 </>
                                             )
                                         )}
@@ -417,34 +430,44 @@ export default defineComponent({
                         </div>
                     )}
                 </Teleport>
-                <span dir="rtl" class={[styles.arabic_text, {
-                    [styles.highlight]: this.highlight === true,
-                    [styles.hover]: this.isHover && this.enableHover,
-                }]}>
+                <span 
+                    dir="rtl" 
+                    class={[
+                        styles.arabic_text,
+                        {
+                            [styles.highlight]: this.highlight === true,
+                            [styles.hover]: this.isHover && this.enableHover,
+                            [styles.verse_error]: this.markedErrors.some(err => err.isVerseError && err.verseNumber === this.verseNumber)
+                        },
+                    ]}
+                    style={this.getVerseErrorStyle()} 
+                    onMouseover={() => this.isHover = true}
+                    onMouseleave={() => this.isHover = false}
+                >
                     {this.shouldUseButton && (
                         <div class="d-none">
                             <div ref={(ref) => this.refs.popoverContent = (ref as HTMLElement)} class="d-flex">
-                            {this.buttons.includes("Bookmark") && this.chapter !== null && (
-                                    <ButtonBookmark
-                                        verseKey={this.verseKey}
-                                        name={this.chapter.name_simple}
+                                {this.buttons.includes("Bookmark") && this.chapter !== null && (
+                                 <ButtonBookmark
+                                    verseKey={this.verseKey}
+                                    name={this.chapter.name_simple}
                                     />
                                 )}
                                 {this.buttons.includes("Copy") && (
-                                    <ButtonCopy
-                                        text={this.textUthmani}
+                                <ButtonCopy
+                                    text={this.textUthmani}
                                     />
                                 )}
                                 {this.buttons.includes("Tafsir") && (
-                                    <ButtonTafsir
-                                        chapterId={this.chapterId!}
-                                        verseNumber={this.verseNumber!}
+                                <ButtonTafsir
+                                    chapterId={this.chapterId!}
+                                    verseNumber={this.verseNumber!}
                                     />
                                 )}
-                                {this.buttons.includes("Play") && (
-                                    <ButtonPlay
-                                        chapterId={this.chapterId!}
-                                        verseNumber={this.verseNumber!}
+                                 {this.buttons.includes("Play") && (
+                                 <ButtonPlay
+                                    chapterId={this.chapterId!}
+                                    verseNumber={this.verseNumber!}
                                     />
                                 )}
                             </div>
@@ -484,7 +507,7 @@ export default defineComponent({
                                     "font-uthmanic": word.char_type_name == "end",
                                     "font-arabic-auto": word.char_type_name == "word"
                                 }]}
-                                style={this.getWordStyle(word)} // Terapkan style di sini
+                                style={this.getWordStyle(word)} 
                             >
                                 {word.text_uthmani}
                             </div>

@@ -28,6 +28,8 @@ export default defineComponent({
     const sort = ref<Sort>("asc");
     const isDeletingBookmark = ref<boolean>(false);
 
+    const halamanInput = ref<string>("1");
+
     const bookmarks = computed<Bookmarks[]>(() => {
       const bookmark = storage.get("BOOKMARK", {});
 
@@ -118,7 +120,7 @@ export default defineComponent({
                       <Tooltip
                         title={this.$t(
                           "general.delete-bookmark"
-                        ).toLocaleLowerCase()}
+                        )}
                       >
                         <font-awesome-icon icon="trash" />
                       </Tooltip>
@@ -138,42 +140,39 @@ export default defineComponent({
                           key={item.id}
                           class="col-6 col-ms-4 col-md-3 col-xl-2"
                         >
-                          <Badge
-                            type="body-tertiary"
-                            tag="div"
-                            class={[
-                              "m-1 p-3 w-100 d-inline-flex align-items-center cursor-pointer",
-                              { "text-dark": !this.$setting.isDarkMode },
-                            ]}
-                          >
-                            <Tooltip
-                              title={this.$t(
-                                "general.delete"
-                              ).toLocaleLowerCase()}
-                            >
-                              <font-awesome-icon
-                                icon="times"
-                                class="me-2 border-end pe-2"
-                                style={{ fontSize: "15px" }}
-                                onClick={() =>
-                                  this.deleteBookmark(item.verse_key)
-                                }
-                              />
-                            </Tooltip>
-                            <router-link
-                              to={{
-                                name: "chapter.verse",
-                                params: { id: item.id, verse: item.verse },
-                              }}
-                            >
-                              <span class="text-truncate">
-                                <span class="me-2 border-end pe-2">
-                                  {item.verse_key}
-                                </span>
-                                {item.name}
-                              </span>
-                            </router-link>
-                          </Badge>
+                          <router-link
+  to={{
+    name: "chapter.verse",
+    params: { id: item.id, verse: item.verse },
+  }}
+>
+  <Badge
+    type="body-tertiary"
+    tag="div"
+    class={[
+      "m-1 p-3 w-100 d-inline-flex align-items-center cursor-pointer",
+      { "text-dark": !this.$setting.isDarkMode },
+    ]}
+  >
+    <Tooltip title={this.$t("general.delete")}>
+      <font-awesome-icon
+        icon="times"
+        class="me-2 border-end pe-2"
+        style={{ fontSize: "15px" }}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation(); // Hentikan agar tidak men-trigger router-link
+          this.deleteBookmark(item.verse_key);
+        }}
+      />
+    </Tooltip>
+    <span class="text-truncate">
+      <span class="me-2 border-end pe-2">{item.verse_key}</span>
+      {item.name}
+    </span>
+  </Badge>
+</router-link>
+
                         </div>
                       ))}
                     </div>
