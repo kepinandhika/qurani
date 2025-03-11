@@ -7,6 +7,7 @@ import Checkbox from "../Input/Checkbox";
 import UsePwa, { DefaultSlotProps } from "../PWA/UsePwa";
 import Range from "../Input/Range";
 import { useEventListener } from "@vueuse/core";
+import { FontType } from "@/hooks/settings";
 
 export default defineComponent({
     emits: {
@@ -142,17 +143,20 @@ export default defineComponent({
 
                                     {/* quran-font select */}
                                     <h6 class="heading-small">{this.$t("general.quran-font")}</h6>
-                                    <select 
-                                        class="form-select mb-2"
-                                        value={this.$setting.fontType}
-                                        onInput={(e: Event) => this.$setting.fontType = (e.target as HTMLSelectElement).value}
-                                    >
-                                        {this.$config.FONTS.map(font => (
-                                            <option key={font} value={font}>
-                                                {font}
-                                            </option>
-                                        ))}
-                                    </select>
+                                   <select 
+  class="form-select mb-2"
+  value={this.$setting.fontType}
+  onInput={(e: Event) =>
+    this.$setting.fontType = ((e.target as HTMLSelectElement).value as unknown) as FontType
+  }
+>
+  {this.$config.FONTS.map(font => (
+    <option key={font} value={font}>
+      {font}
+    </option>
+  ))}
+</select>
+
 
                                     <div class="d-flex justify-content-between mt-3">
                                         <div class="h-100">

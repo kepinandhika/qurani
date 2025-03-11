@@ -159,7 +159,7 @@ export default defineComponent({
         icon="times"
         class="me-2 border-end pe-2"
         style={{ fontSize: "15px" }}
-        onClick={(e) => {
+        onClick={(e: { preventDefault: () => void; stopPropagation: () => void; }) => {
           e.preventDefault();
           e.stopPropagation(); // Hentikan agar tidak men-trigger router-link
           this.deleteBookmark(item.verse_key);
