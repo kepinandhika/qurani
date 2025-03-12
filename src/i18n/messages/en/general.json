@@ -63,6 +63,7 @@
     "new_friend": "Enter your friend name",
     "add_friend": "Search",
     "new_group": "Enter a name of your group",
-    "friends": "Friend",
+    "friends": "Member",
+    "frien": "Choose Member",
     "surah-info-is-not-available-here": "Surah info is not available here."
 }

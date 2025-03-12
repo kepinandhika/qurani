@@ -73,349 +73,107 @@ export default defineComponent({
       }
     }
 
-    // ===== Fitur Grup dan Teman dalam 1 Card =====
-    // Tab aktif antara "groups" dan "friends"
-    const activeCardTab = ref<"groups" | "friends">("groups");
-
-    // State untuk minimize Card (default: minimized)
-    const isCardMinimized = ref(true);
-
-    // Data dinamis untuk grup dan teman
+    // ===== Fitur Grup dan Teman menggunakan Select secara Bersampingan =====
+    // Data statis untuk dua grup: Grup A dan Grup B, masing-masing beranggotakan 5 orang
     const groups = ref([
       {
-        id: 1,
-        name: "Grup Tes Statis",
-        members: ["Ahmad", "Budi"],
-        open: false,
+        id: "a",
+        name: "Ubig 2025",
+        members: [
+          { id: 1, name: "Fatkul Amri - 7678" },
+          { id: 2, name: "Asrori - 9809" },
+          { id: 3, name: "Masum - 9890" },
+          { id: 4, name: "Dimas - 6236" },
+          { id: 5, name: "Richo - 2354" },
+        ],
+      },
+      {
+        id: "b",
+        name: "Qurani 2025",
+        members: [
+          { id: 6, name: "Galuh - 1221" },
+          { id: 7, name: "Kevin - 2827" },
+          { id: 8, name: "Dewa - 8723" },
+          { id: 9, name: "Niko - 9012" },
+          { id: 10, name: "Alvin - 8790" },
+        ],
       },
     ]);
-    const friends = ref(["Andi", "Budi"]);
 
-    // Fungsi untuk menambah grup baru
-    const newGroupName = ref("");
-    function addGroup() {
-      if (newGroupName.value.trim() === "") {
-        toast.error("Nama grup tidak boleh kosong");
-        return;
-      }
-      const newId = groups.value.length ? Math.max(...groups.value.map(g => g.id)) + 1 : 1;
-      groups.value.push({
-        id: newId,
-        name: newGroupName.value,
-        members: [],
-        open: false,
-      });
-      newGroupName.value = "";
-      toast.success("Grup berhasil ditambahkan");
-    }
+    // Pilihan grup yang sedang dipilih, default Grup A
+    const selectedGroup = ref("a");
 
-    // Fungsi untuk menghapus grup
-    function deleteGroup(id: number) {
-      groups.value = groups.value.filter((group) => group.id !== id);
-      toast.success("Grup berhasil dihapus");
-    }
-
-    // Fungsi toggle untuk buka/tutup daftar member grup
-    function toggleGroup(id: number) {
-      groups.value = groups.value.map((group) => {
-        if (group.id === id) {
-          return { ...group, open: !group.open };
-        }
-        return group;
-      });
-    }
-
-    // Menambah anggota ke grup (memilih dari daftar teman)
-    function addMemberToGroup(groupId: number, friend: string) {
-      groups.value = groups.value.map((group) => {
-        if (group.id === groupId) {
-          if (!group.members.includes(friend)) {
-            return { ...group, members: [...group.members, friend] };
-          } else {
-            toast.info(`${friend} sudah ada di grup`);
-          }
-        }
-        return group;
-      });
-    }
-
-    // Menghapus anggota dari grup
-    function removeMemberFromGroup(groupId: number, member: string) {
-      groups.value = groups.value.map((group) => {
-        if (group.id === groupId) {
-          return { ...group, members: group.members.filter((m) => m !== member) };
-        }
-        return group;
-      });
-      toast.success(`${member} telah dihapus dari grup`);
-    }
-
-    // Menambah pertemanan baru
-    const newFriendName = ref("");
-    function addFriend() {
-      const name = newFriendName.value.trim();
-      if (name === "") {
-        toast.error("Nama teman tidak boleh kosong");
-        return;
-      }
-      if (["Liko", "Galang"].includes(name)) {
-        toast.error("Pengguna tidak ditemukan");
-        return;
-      }
-      if (!friends.value.includes(name)) {
-        friends.value.push(name);
-        newFriendName.value = "";
-        toast.success("Pengguna ditemukan dan berhasil ditambahkan");
-      } else {
-        toast.info("Teman sudah ada");
-      }
-    }
-
-    // Menghapus pertemanan (unfriend)
-    function removeFriend(friend: string) {
-      friends.value = friends.value.filter((f) => f !== friend);
-      toast.success("Teman telah dihapus");
-    }
-
-    // Fungsi invite untuk demo
-    function invite(item: string) {
-      toast.success(`${item} diundang untuk membaca bersama!`);
-    }
+    // Daftar anggota (teman) yang ditampilkan berdasarkan grup yang dipilih
+    const currentMembers = computed(() => {
+      const group = groups.value.find((g) => g.id === selectedGroup.value);
+      return group ? group.members : [];
+    });
 
     return {
+      t,
       tab,
       sort,
       bookmarks,
       halamanInput,
       isInputFilled,
       navigateToSurah,
-      // Untuk tab grup/teman
-      activeCardTab,
-      isCardMinimized,
+      // Data untuk grup dan teman (select)
       groups,
-      friends,
-      newGroupName,
-      addGroup,
-      deleteGroup,
-      toggleGroup,
-      addMemberToGroup,
-      removeMemberFromGroup,
-      newFriendName,
-      addFriend,
-      removeFriend,
-      invite,
-      t,
+      selectedGroup,
+      currentMembers,
     };
   },
   render() {
     return (
       <MainLayout>
-        {/* Card untuk Grup & Teman dengan Tab dan fitur minimize (default: minimize) */}
-        <Card class="mb-3 bg-primary " headerClasses="text-center">
-          {{
-            header: () => (
-              <div class="d-flex justify-content-between align-items-center">
-                <div class="d-flex gap-2">
-                  <button
-                    class={["btn", this.activeCardTab === "groups" ? "btn-success" : "text-white"]}
-                    onClick={() => (this.activeCardTab = "groups")}
-                  >
-                    {this.t("general.group")}
-                  </button>
-                  <button
-                    class={["btn", this.activeCardTab === "friends" ? "btn-success" : "text-white"]}
-                    onClick={() => (this.activeCardTab = "friends")}
-                  >
-                    {this.t("general.friends")}
-                  </button>
-                </div>
-                <button 
-  class={`btn ${this.$setting.isDarkMode ? "btn-dark text-white" : "btn-light text-dark"}`}
-  onClick={() => { this.isCardMinimized = !this.isCardMinimized; }}
->
-  {this.isCardMinimized ? this.t("general.besar") : this.t("general.kecil")}
-</button>
-
-              </div>
-            ),
-            default: () =>
-              !this.isCardMinimized && (
-                <div class="p-3">
-                  {/* Tampilan untuk Grup */}
-                  {this.activeCardTab === "groups" && (
-                    <div>
-                      {/* Form tambah grup */}
-                      <div class="mb-3 d-flex gap-2">
-                        <input
-                          type="text"
-                          class="form-control"
-                          placeholder={this.t("general.new_group")}
-                          value={this.newGroupName}
-                          onInput={(e: Event) => {
-                            const inputEl = e.target as HTMLInputElement;
-                            this.newGroupName = inputEl.value;
-                          }}
-                        />
-                        <button class="btn btn-success" onClick={this.addGroup}>
-                          {this.t("general.add_group")}
-                        </button>
-                      </div>
-                      {this.groups.map((group) => (
-                        <div key={group.id} class="mb-3 border-bottom pb-2 text-light">
-                          <div
-                            class="d-flex justify-content-between align-items-center cursor-pointer"
-                            onClick={() => this.toggleGroup(group.id)}
-                          >
-                            <span>{group.name}</span>
-                            <div class="d-flex gap-2">
-                              <button
-                                class="btn btn-light"
-                                style="width: 40px; height: 40px; border-radius: 50%; padding: 0;"
-                                onClick={(e: Event) => {
-                                  e.stopPropagation();
-                                  this.invite(group.name);
-                                }}
-                              >
-                                <font-awesome-icon icon="plus" />
-                              </button>
-                              <button
-                                class="btn btn-warning"
-                                style="width: 40px; height: 40px; border-radius: 50%; padding: 0;"
-                                onClick={(e: Event) => {
-                                  e.stopPropagation();
-                                  this.deleteGroup(group.id);
-                                }}
-                              >
-                                <font-awesome-icon icon="trash" />
-                              </button>
-                            </div>
-                          </div>
-                          {group.open && (
-                            <div class="mt-2 ms-3">
-                              <div class="fw-bold ">{this.t("general.member")}</div>
-                              <ul class="list-unstyled mb-0">
-                                {group.members.map((member, idx) => (
-                                  <li key={idx} class="d-flex justify-content-between align-items-center text-light">
-                                    <span>{member}</span>
-                                    <div class="d-flex gap-2">
-                                      <button
-                                        class="btn btn-warning my-1"
-                                        style="width: 30px; height: 30px; border-radius: 50%; padding: 0;"
-                                        onClick={() => this.removeMemberFromGroup(group.id, member)}
-                                      >
-                                        <font-awesome-icon icon="minus" />
-                                      </button>
-                                      <button
-                                        class="btn btn-light my-1"
-                                        style="width: 30px; height: 30px; border-radius: 50%; padding: 0;"
-                                        onClick={(e: Event) => {
-                                          e.stopPropagation();
-                                          this.invite(member);
-                                        }}
-                                      >
-                                        <font-awesome-icon icon="plus" />
-                                      </button>
-                                    </div>
-                                  </li>
-                                ))}
-                              </ul>
-                              {/* Form untuk menambah member dari daftar teman */}
-                              <div class="mt-2 d-flex gap-2">
-                                <select
-                                  class="form-select"
-                                  style="max-width: 200px;"
-                                  onChange={(e: Event) => {
-                                    const sel = e.target as HTMLSelectElement;
-                                    const friend = sel.value;
-                                    if (friend !== "") {
-                                      this.addMemberToGroup(group.id, friend);
-                                      sel.selectedIndex = 0;
-                                    }
-                                  }}
-                                >
-                                  <option value="">{this.t("general.select_friend")}</option>
-                                  {this.friends.map((friend, idx) => (
-                                    <option key={idx} value={friend}>
-                                      {friend}
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Tampilan untuk Teman */}
-                  {this.activeCardTab === "friends" && (
-                    <div>
-                      {/* Form tambah teman */}
-                      <div class="mb-3 d-flex gap-2">
-                        <input
-                          type="text"
-                          class="form-control"
-                          placeholder={this.t("general.new_friend")}
-                          value={this.newFriendName}
-                          onInput={(e: Event) => {
-                            const inputEl = e.target as HTMLInputElement;
-                            this.newFriendName = inputEl.value;
-                          }}
-                        />
-                        <button class="btn btn-success" onClick={this.addFriend}>
-                          {this.t("general.add_friend")}
-                        </button>
-                      </div>
-                      <ul class="list-unstyled">
-                        {this.friends.map((friend, idx) => (
-                          <li key={idx} class="d-flex justify-content-between align-items-center mb-2 text-light">
-                            <span>{friend}</span>
-                            <div class="d-flex gap-2">
-                              <button
-                                class="btn btn-warning"
-                                style="width: 40px; height: 40px; border-radius: 50%; padding: 0;"
-                                onClick={() => this.removeFriend(friend)}
-                              >
-                                <font-awesome-icon icon="minus" />
-                              </button>
-                              <button
-                                class="btn btn-light"
-                                style="width: 40px; height: 40px; border-radius: 50%; padding: 0;"
-                                onClick={(e: Event) => {
-                                  e.stopPropagation();
-                                  this.invite(friend);
-                                }}
-                              >
-                                <font-awesome-icon icon="plus" />
-                              </button>
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              ),
-          }}
-        </Card>
+        {/* Tampilan select untuk Grup dan Teman secara bersampingan */}
+        <div class="d-flex gap-3 mb-3">
+          <div class="flex-fill">
+            <label class="mb-1 d-block">{this.t("general.group")}</label>
+            <select
+              class="form-select"
+              value={this.selectedGroup}
+              onChange={(e: Event) => {
+                const sel = e.target as HTMLSelectElement;
+                this.selectedGroup = sel.value;
+              }}
+            >
+              {this.groups.map((group) => (
+                <option key={group.id} value={group.id}>
+                  {group.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div class="flex-fill">
+            <label class="mb-1 d-block">{this.t("general.friends")}</label>
+            <select class="form-select">
+              <option value="">{this.t("general.frien")}</option>
+              {this.currentMembers.map((member) => (
+                <option key={member.id} value={member.id}>
+                  {member.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
 
         {/* Card Favorit Surah */}
-        <Card 
-        class={["mb-4 text-white"  ,
-          { "bg-white": !this.$setting.isDarkMode },]}
-        headerClasses="d-flex justify-content-between bg-primary" >
+        <Card
+          class={["mb-4 text-white", { "bg-white": !this.$setting.isDarkMode }]}
+          headerClasses="d-flex justify-content-between bg-primary"
+        >
           {{
             header: () => (
-              <div class="card-title my-auto"  >
-                <div class="text-center font-bold text-lg" >
+              <div class="card-title my-auto">
+                <div class="text-center font-bold text-lg">
                   {this.t("general.surahfavorite")}
                 </div>
               </div>
             ),
             default: () => (
               <div class="row custom-scrollbar" style="overflow-x: hidden; max-height: 200px">
-                <div class="card-title my-auto d-flex flex-wrap gap-2 justify-center" >
+                <div class="card-title my-auto d-flex flex-wrap gap-2 justify-center">
                   <router-link
                     to="/surah/36"
                     class="px-2 py-1 bg-warning rounded text-dark text-sm sm:text-base"
