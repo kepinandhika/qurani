@@ -323,7 +323,8 @@ export default defineComponent({
             if (verseError && verseError.errorType in errorColors) {
               return {
                 backgroundColor: errorColors[verseError.errorType],
-                padding: '14px',
+                padding: '26px 1px 14px 1px',
+                
               };
             }
             return {};
