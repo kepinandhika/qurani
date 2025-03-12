@@ -71,7 +71,7 @@ export const config: Config = {
     },
     DEFAULT_SETTINGS: {
         locale: "id",
-        theme: "auto",
+        theme: "light",
         font_size: 5,
         font_type: "Default",
         scale:  0.8,
