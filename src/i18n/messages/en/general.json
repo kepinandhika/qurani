@@ -55,7 +55,7 @@
     "word-by-word": "Word by word",
     "transliteration": "Transliteration",
     "source": "Source",
-    "group": "Grouplist",
+    "group": "Group",
     "member": "Members :",
     "add_group": "Add",
     "kecil": "Minimize",
@@ -63,6 +63,6 @@
     "new_friend": "Enter your friend name",
     "add_friend": "Search",
     "new_group": "Enter a name of your group",
-    "friends": "Friendslist",
+    "friends": "Friend",
     "surah-info-is-not-available-here": "Surah info is not available here."
 }

@@ -73,6 +73,13 @@ export default defineComponent({
       }
     }
 
+    // ===== Fitur Grup dan Teman dalam 1 Card =====
+    // Tab aktif antara "groups" dan "friends"
+    const activeCardTab = ref<"groups" | "friends">("groups");
+
+    // State untuk minimize Card (default: minimized)
+    const isCardMinimized = ref(true);
+
     // Data dinamis untuk grup dan teman
     const groups = ref([
       {
@@ -83,19 +90,6 @@ export default defineComponent({
       },
     ]);
     const friends = ref(["Andi", "Budi"]);
-
-    // Tambahkan state untuk minimize card
-    const isGroupsMinimized = ref(true);
-    const isFriendsMinimized = ref(true);
-
-    // Fungsi untuk toggle minimize pada Card Grup
-    function toggleGroupsCard() {
-      isGroupsMinimized.value = !isGroupsMinimized.value;
-    }
-    // Fungsi untuk toggle minimize pada Card Teman
-    function toggleFriendsCard() {
-      isFriendsMinimized.value = !isFriendsMinimized.value;
-    }
 
     // Fungsi untuk menambah grup baru
     const newGroupName = ref("");
@@ -112,7 +106,7 @@ export default defineComponent({
         open: false,
       });
       newGroupName.value = "";
-      toast.success("Grup ditemukan");
+      toast.success("Grup berhasil ditambahkan");
     }
 
     // Fungsi untuk menghapus grup
@@ -164,7 +158,6 @@ export default defineComponent({
         toast.error("Nama teman tidak boleh kosong");
         return;
       }
-      // Jika nama yang dicari adalah "Liko" atau "Galang", maka pengguna dianggap tidak ada.
       if (["Liko", "Galang"].includes(name)) {
         toast.error("Pengguna tidak ditemukan");
         return;
@@ -196,6 +189,9 @@ export default defineComponent({
       halamanInput,
       isInputFilled,
       navigateToSurah,
+      // Untuk tab grup/teman
+      activeCardTab,
+      isCardMinimized,
       groups,
       friends,
       newGroupName,
@@ -209,258 +205,253 @@ export default defineComponent({
       removeFriend,
       invite,
       t,
-      isGroupsMinimized,
-      isFriendsMinimized,
-      toggleGroupsCard,
-      toggleFriendsCard,
     };
   },
   render() {
     return (
       <MainLayout>
-        {/* Card untuk Grup */}
-        <Card class="mb-4 bg-primary bg-primary text-white" headerClasses="text-center">
+        {/* Card untuk Grup & Teman dengan Tab dan fitur minimize (default: minimize) */}
+        <Card class="mb-3 bg-primary " headerClasses="text-center">
           {{
             header: () => (
               <div class="d-flex justify-content-between align-items-center">
-                <div class="font-bold text-lg text-start">
-                  {this.t("general.group")}
+                <div class="d-flex gap-2">
+                  <button
+                    class={["btn", this.activeCardTab === "groups" ? "btn-success" : "text-white"]}
+                    onClick={() => (this.activeCardTab = "groups")}
+                  >
+                    {this.t("general.group")}
+                  </button>
+                  <button
+                    class={["btn", this.activeCardTab === "friends" ? "btn-success" : "text-white"]}
+                    onClick={() => (this.activeCardTab = "friends")}
+                  >
+                    {this.t("general.friends")}
+                  </button>
                 </div>
-                <button class="btn btn-light text-primary" onClick={this.toggleGroupsCard}>
-                  {this.isGroupsMinimized ? this.t("general.kecil") : this.t("general.besar")}
-                </button>
-              </div>
-            ),
-            default: () =>
-              !this.isGroupsMinimized && (
-                <div class="p-3">
-                  {/* Form tambah grup */}
-                  <div class="mb-3 d-flex gap-2">
-                    <input
-                      type="text"
-                      class="form-control"
-                      placeholder={this.t("general.new_group")}
-                      value={this.newGroupName}
-                      onInput={(e: Event) => {
-                        const inputEl = e.target as HTMLInputElement;
-                        this.newGroupName = inputEl.value;
-                      }}
-                    />
-                    <button class="btn btn-success" onClick={this.addGroup}>
-                      {this.t("general.add_group")}
-                    </button>
-                  </div>
-                  {this.groups.map((group) => (
-                    <div key={group.id} class="mb-3 border-bottom pb-2">
-                      <div
-                        class="d-flex justify-content-between align-items-center cursor-pointer"
-                        onClick={() => this.toggleGroup(group.id)}
-                      >
-                        <span>{group.name}</span>
-                        <div class="d-flex gap-2">
-                          <button
-                            class="btn btn-light"
-                            style="width: 40px; height: 40px; border-radius: 50%; padding: 0;"
-                            onClick={(e: Event) => {
-                              e.stopPropagation();
-                              this.invite(group.name);
-                            }}
-                          >
-                            <font-awesome-icon icon="plus" />
-                          </button>
-                          <button
-                            class="btn btn-warning"
-                            style="width: 40px; height: 40px; border-radius: 50%; padding: 0;"
-                            onClick={(e: Event) => {
-                              e.stopPropagation();
-                              this.deleteGroup(group.id);
-                            }}
-                          >
-                            <font-awesome-icon icon="trash" />
-                          </button>
-                        </div>
-                      </div>
-                      {group.open && (
-                        <div class="mt-2 ms-3">
-                          <div class="fw-bold">{this.t("general.member")}</div>
-                          <ul class="list-unstyled mb-0">
-                            {group.members.map((member, idx) => (
-                              <li key={idx} class="d-flex justify-content-between align-items-center">
-                                <span>{member}</span>
-                                <div class="d-flex gap-2">
-                                  <button
-                                    class="btn btn-warning my-1"
-                                    style="width: 30px; height: 30px; border-radius: 50%; padding: 0;"
-                                    onClick={() =>
-                                      this.removeMemberFromGroup(group.id, member)
-                                    }
-                                  >
-                                    <font-awesome-icon icon="minus" />
-                                  </button>
-                                  <button
-                                    class="btn btn-light my-1"
-                                    style="width: 30px; height: 30px; border-radius: 50%; padding: 0;"
-                                    onClick={(e: Event) => {
-                                      e.stopPropagation();
-                                      this.invite(member);
-                                    }}
-                                  >
-                                    <font-awesome-icon icon="plus" />
-                                  </button>
-                                </div>
-                              </li>
-                            ))}
-                          </ul>
-                          {/* Form untuk menambah member dari daftar teman */}
-                          <div class="mt-2 d-flex gap-2">
-                            <select
-                              class="form-select"
-                              style="max-width: 200px;"
-                              onChange={(e: Event) => {
-                                const sel = e.target as HTMLSelectElement;
-                                const friend = sel.value;
-                                if (friend !== "") {
-                                  this.addMemberToGroup(group.id, friend);
-                                  sel.selectedIndex = 0;
-                                }
-                              }}
-                            >
-                              <option value="">
-                                {this.t("general.select_friend")}
-                              </option>
-                              {this.friends.map((friend, idx) => (
-                                <option key={idx} value={friend}>
-                                  {friend}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ),
-          }}
-        </Card>
+                <button 
+  className={`btn ${this.$setting.isDarkMode ? "btn-dark text-white" : "btn-light text-dark"}`}
+  onClick={() => { this.isCardMinimized = !this.isCardMinimized; }}
+>
+  {this.isCardMinimized ? this.t("general.besar") : this.t("general.kecil")}
+</button>
 
-        {/* Card untuk Teman */}
-        <Card class="mb-4 bg-primary bg-primary text-white" headerClasses="text-center">
-          {{
-            header: () => (
-              <div class="d-flex justify-content-between align-items-center">
-                <div class="font-bold text-lg text-start">
-                  {this.t("general.friends")}
-                </div>
-                <button class="btn btn-light text-primary" onClick={this.toggleFriendsCard}>
-                {this.isGroupsMinimized ? this.t("general.kecil") : this.t("general.besar")}
-                </button>
               </div>
             ),
             default: () =>
-              !this.isFriendsMinimized && (
+              !this.isCardMinimized && (
                 <div class="p-3">
-                  {/* Form tambah teman */}
-                  <div class="mb-3 d-flex gap-2">
-                    <input
-                      type="text"
-                      class="form-control"
-                      placeholder={this.t("general.new_friend")}
-                      value={this.newFriendName}
-                      onInput={(e: Event) => {
-                        const inputEl = e.target as HTMLInputElement;
-                        this.newFriendName = inputEl.value;
-                      }}
-                    />
-                    <button class="btn btn-success" onClick={this.addFriend}>
-                      {this.t("general.add_friend")}
-                    </button>
-                  </div>
-                  <ul class="list-unstyled">
-                    {this.friends.map((friend, idx) => (
-                      <li
-                        key={idx}
-                        class="d-flex justify-content-between align-items-center mb-2"
-                      >
-                        <span>{friend}</span>
-                        <div class="d-flex gap-2">
-                          <button
-                            class="btn btn-warning"
-                            style="width: 40px; height: 40px; border-radius: 50%; padding: 0;"
-                            onClick={() => this.removeFriend(friend)}
+                  {/* Tampilan untuk Grup */}
+                  {this.activeCardTab === "groups" && (
+                    <div>
+                      {/* Form tambah grup */}
+                      <div class="mb-3 d-flex gap-2">
+                        <input
+                          type="text"
+                          class="form-control"
+                          placeholder={this.t("general.new_group")}
+                          value={this.newGroupName}
+                          onInput={(e: Event) => {
+                            const inputEl = e.target as HTMLInputElement;
+                            this.newGroupName = inputEl.value;
+                          }}
+                        />
+                        <button class="btn btn-success" onClick={this.addGroup}>
+                          {this.t("general.add_group")}
+                        </button>
+                      </div>
+                      {this.groups.map((group) => (
+                        <div key={group.id} class="mb-3 border-bottom pb-2 text-light">
+                          <div
+                            class="d-flex justify-content-between align-items-center cursor-pointer"
+                            onClick={() => this.toggleGroup(group.id)}
                           >
-                            <font-awesome-icon icon="minus" />
-                          </button>
-                          <button
-                            class="btn btn-light"
-                            style="width: 40px; height: 40px; border-radius: 50%; padding: 0;"
-                            onClick={(e: Event) => {
-                              e.stopPropagation();
-                              this.invite(friend);
-                            }}
-                          >
-                            <font-awesome-icon icon="plus" />
-                          </button>
+                            <span>{group.name}</span>
+                            <div class="d-flex gap-2">
+                              <button
+                                class="btn btn-light"
+                                style="width: 40px; height: 40px; border-radius: 50%; padding: 0;"
+                                onClick={(e: Event) => {
+                                  e.stopPropagation();
+                                  this.invite(group.name);
+                                }}
+                              >
+                                <font-awesome-icon icon="plus" />
+                              </button>
+                              <button
+                                class="btn btn-warning"
+                                style="width: 40px; height: 40px; border-radius: 50%; padding: 0;"
+                                onClick={(e: Event) => {
+                                  e.stopPropagation();
+                                  this.deleteGroup(group.id);
+                                }}
+                              >
+                                <font-awesome-icon icon="trash" />
+                              </button>
+                            </div>
+                          </div>
+                          {group.open && (
+                            <div class="mt-2 ms-3">
+                              <div class="fw-bold ">{this.t("general.member")}</div>
+                              <ul class="list-unstyled mb-0">
+                                {group.members.map((member, idx) => (
+                                  <li key={idx} class="d-flex justify-content-between align-items-center text-light">
+                                    <span>{member}</span>
+                                    <div class="d-flex gap-2">
+                                      <button
+                                        class="btn btn-warning my-1"
+                                        style="width: 30px; height: 30px; border-radius: 50%; padding: 0;"
+                                        onClick={() => this.removeMemberFromGroup(group.id, member)}
+                                      >
+                                        <font-awesome-icon icon="minus" />
+                                      </button>
+                                      <button
+                                        class="btn btn-light my-1"
+                                        style="width: 30px; height: 30px; border-radius: 50%; padding: 0;"
+                                        onClick={(e: Event) => {
+                                          e.stopPropagation();
+                                          this.invite(member);
+                                        }}
+                                      >
+                                        <font-awesome-icon icon="plus" />
+                                      </button>
+                                    </div>
+                                  </li>
+                                ))}
+                              </ul>
+                              {/* Form untuk menambah member dari daftar teman */}
+                              <div class="mt-2 d-flex gap-2">
+                                <select
+                                  class="form-select"
+                                  style="max-width: 200px;"
+                                  onChange={(e: Event) => {
+                                    const sel = e.target as HTMLSelectElement;
+                                    const friend = sel.value;
+                                    if (friend !== "") {
+                                      this.addMemberToGroup(group.id, friend);
+                                      sel.selectedIndex = 0;
+                                    }
+                                  }}
+                                >
+                                  <option value="">{this.t("general.select_friend")}</option>
+                                  {this.friends.map((friend, idx) => (
+                                    <option key={idx} value={friend}>
+                                      {friend}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            </div>
+                          )}
                         </div>
-                      </li>
-                    ))}
-                  </ul>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Tampilan untuk Teman */}
+                  {this.activeCardTab === "friends" && (
+                    <div>
+                      {/* Form tambah teman */}
+                      <div class="mb-3 d-flex gap-2">
+                        <input
+                          type="text"
+                          class="form-control"
+                          placeholder={this.t("general.new_friend")}
+                          value={this.newFriendName}
+                          onInput={(e: Event) => {
+                            const inputEl = e.target as HTMLInputElement;
+                            this.newFriendName = inputEl.value;
+                          }}
+                        />
+                        <button class="btn btn-success" onClick={this.addFriend}>
+                          {this.t("general.add_friend")}
+                        </button>
+                      </div>
+                      <ul class="list-unstyled">
+                        {this.friends.map((friend, idx) => (
+                          <li key={idx} class="d-flex justify-content-between align-items-center mb-2 text-light">
+                            <span>{friend}</span>
+                            <div class="d-flex gap-2">
+                              <button
+                                class="btn btn-warning"
+                                style="width: 40px; height: 40px; border-radius: 50%; padding: 0;"
+                                onClick={() => this.removeFriend(friend)}
+                              >
+                                <font-awesome-icon icon="minus" />
+                              </button>
+                              <button
+                                class="btn btn-light"
+                                style="width: 40px; height: 40px; border-radius: 50%; padding: 0;"
+                                onClick={(e: Event) => {
+                                  e.stopPropagation();
+                                  this.invite(friend);
+                                }}
+                              >
+                                <font-awesome-icon icon="plus" />
+                              </button>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               ),
           }}
         </Card>
 
         {/* Card Favorit Surah */}
-        <Card class="mb-4 bg-primary bg-primary text-white" headerClasses="d-flex justify-content-between">
+        <Card 
+        class={["mb-4 text-white"  ,
+          { "bg-white": !this.$setting.isDarkMode },]}
+        headerClasses="d-flex justify-content-between bg-primary" >
           {{
             header: () => (
-              <div class="card-title my-auto">
-                <div class="text-center font-bold text-lg mb-2">
+              <div class="card-title my-auto"  >
+                <div class="text-center font-bold text-lg" >
                   {this.t("general.surahfavorite")}
                 </div>
               </div>
             ),
             default: () => (
               <div class="row custom-scrollbar" style="overflow-x: hidden; max-height: 200px">
-                <div class="card-title my-auto d-flex flex-wrap gap-2 justify-center">
+                <div class="card-title my-auto d-flex flex-wrap gap-2 justify-center" >
                   <router-link
                     to="/surah/36"
-                    class="px-2 py-1 bg-warning rounded text-dark rounded-md text-sm sm:text-base"
+                    class="px-2 py-1 bg-warning rounded text-dark text-sm sm:text-base"
                   >
                     Yasin
                   </router-link>
                   <router-link
                     to="/surah/67"
-                    class="px-2 py-1 bg-success rounded text-dark rounded-md text-sm sm:text-base"
+                    class="px-2 py-1 bg-success rounded text-dark text-sm sm:text-base"
                   >
                     Al-Mulk
                   </router-link>
                   <router-link
                     to="/surah/56"
-                    class="px-2 py-1 bg-success rounded text-dark rounded-md text-sm sm:text-base"
+                    class="px-2 py-1 bg-success rounded text-dark text-sm sm:text-base"
                   >
                     Al-Waqi'ah
                   </router-link>
                   <router-link
                     to="/surah/18"
-                    class="px-2 py-1 bg-success rounded text-dark rounded-md text-sm sm:text-base"
+                    class="px-2 py-1 bg-success rounded text-dark text-sm sm:text-base"
                   >
                     Al-Kahf
                   </router-link>
                   <router-link
                     to="/surah/78"
-                    class="px-2 py-1 bg-success rounded text-dark rounded-md text-sm sm:text-base"
+                    class="px-2 py-1 bg-success rounded text-dark text-sm sm:text-base"
                   >
                     An-Naba
                   </router-link>
                   <router-link
                     to="/surah/2"
-                    class="px-2 py-1 bg-success rounded text-dark rounded-md text-sm sm:text-base"
+                    class="px-2 py-1 bg-success rounded text-dark text-sm sm:text-base"
                   >
                     Al-Baqarah
                   </router-link>
-               
-                
                 </div>
               </div>
             ),
@@ -518,8 +509,7 @@ export default defineComponent({
                 style="width: 3ch;"
                 onInput={(e: Event) => {
                   const inputEl = e.target as HTMLInputElement;
-                  let inputVal = inputEl.value;
-                  inputVal = inputVal.replace(/\D/g, "");
+                  let inputVal = inputEl.value.replace(/\D/g, "");
                   if (inputVal.length > 3) {
                     inputVal = inputVal.slice(0, 3);
                     inputEl.value = inputVal;
@@ -537,11 +527,7 @@ export default defineComponent({
                   }
                 }}
               />
-              <button
-                class="btn btn-primary"
-                disabled={!this.isInputFilled}
-                onClick={this.navigateToSurah}
-              >
+              <button class="btn btn-primary" disabled={!this.isInputFilled} onClick={this.navigateToSurah}>
                 {this.t("general.gopage")}
               </button>
             </div>
