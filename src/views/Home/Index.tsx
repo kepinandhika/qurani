@@ -230,7 +230,7 @@ export default defineComponent({
                   </button>
                 </div>
                 <button 
-  className={`btn ${this.$setting.isDarkMode ? "btn-dark text-white" : "btn-light text-dark"}`}
+  class={`btn ${this.$setting.isDarkMode ? "btn-dark text-white" : "btn-light text-dark"}`}
   onClick={() => { this.isCardMinimized = !this.isCardMinimized; }}
 >
   {this.isCardMinimized ? this.t("general.besar") : this.t("general.kecil")}
