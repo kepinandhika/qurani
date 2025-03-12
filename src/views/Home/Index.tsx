@@ -22,6 +22,7 @@ export default defineComponent({
     const chapters = useChapters();
     const { t } = useI18n();
 
+    // Tab utama untuk konten Surah/Juz/Halaman
     const tab = ref<Tab>("surah");
     const sort = ref<Sort>("asc");
     const halamanInput = ref<string>("1");
@@ -73,8 +74,8 @@ export default defineComponent({
       }
     }
 
-    // ===== Fitur Grup dan Teman menggunakan Select secara Bersampingan =====
-    // Data statis untuk dua grup: Grup A dan Grup B, masing-masing beranggotakan 5 orang
+    // ===== Data untuk tab ekstra: Grup & Pengguna =====
+    // Data statis untuk dua grup dan anggotanya
     const groups = ref([
       {
         id: "a",
@@ -99,15 +100,25 @@ export default defineComponent({
         ],
       },
     ]);
-
-    // Pilihan grup yang sedang dipilih, default Grup A
-    const selectedGroup = ref("a");
-
-    // Daftar anggota (teman) yang ditampilkan berdasarkan grup yang dipilih
+    // Nilai awal selectedGroup diubah menjadi string kosong untuk menampilkan default option
+    const selectedGroup = ref("");
+    // Daftar anggota (teman) berdasarkan grup yang dipilih
     const currentMembers = computed(() => {
       const group = groups.value.find((g) => g.id === selectedGroup.value);
       return group ? group.members : [];
     });
+
+    // Data statis untuk 5 pengguna
+    const staticUsers = ref([
+      { id: 1, name: "Alfian - 4538" },
+      { id: 2, name: "Lang - 7689" },
+      { id: 3, name: "Naufal - 7109" },
+      { id: 4, name: "Fauzan - 8145" },
+      { id: 5, name: "Tito - 9021" },
+    ]);
+
+    // Tab ekstra untuk mengatur tampilan Grup dan Pengguna
+    const extraTab = ref<"grup" | "pengguna">("grup");
 
     return {
       t,
@@ -117,46 +128,84 @@ export default defineComponent({
       halamanInput,
       isInputFilled,
       navigateToSurah,
-      // Data untuk grup dan teman (select)
+      // Data untuk tab ekstra
+      extraTab,
       groups,
       selectedGroup,
       currentMembers,
+      staticUsers,
     };
   },
   render() {
     return (
       <MainLayout>
-        {/* Tampilan select untuk Grup dan Teman secara bersampingan */}
-        <div class="d-flex gap-3 mb-3">
-          <div class="flex-fill">
-            <label class="mb-1 d-block">{this.t("general.group")}</label>
-            <select
-              class="form-select"
-              value={this.selectedGroup}
-              onChange={(e: Event) => {
-                const sel = e.target as HTMLSelectElement;
-                this.selectedGroup = sel.value;
-              }}
-            >
-              {this.groups.map((group) => (
-                <option key={group.id} value={group.id}>
-                  {group.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div class="flex-fill">
-            <label class="mb-1 d-block">{this.t("general.friends")}</label>
-            <select class="form-select">
-              <option value="">{this.t("general.frien")}</option>
-              {this.currentMembers.map((member) => (
-                <option key={member.id} value={member.id}>
-                  {member.name}
-                </option>
-              ))}
-            </select>
-          </div>
+        {/* Navigation Tab Ekstra untuk Grup dan Pengguna (diletakkan di atas Card Favorit Surah) */}
+        <div class="d-flex justify-content-start mb-3">
+          <ul class="nav nav-pills">
+            <li class="nav-item" onClick={() => (this.extraTab = "grup")}>
+              <div class={["nav-link cursor-pointer", { active: this.extraTab === "grup" }]}>
+                {this.t("general.group")}
+              </div>
+            </li>
+            <li class="nav-item" onClick={() => (this.extraTab = "pengguna")}>
+              <div class={["nav-link cursor-pointer", { active: this.extraTab === "pengguna" }]}>
+                {this.t("general.users")}
+              </div>
+            </li>
+          </ul>
         </div>
+
+        {/* Konten berdasarkan Extra Tab */}
+        {this.extraTab === "grup" ? (
+          // Jika tab ekstra "grup", tampilkan select untuk Grup dan Anggota (Friends)
+          <div class="d-flex gap-3 mb-3">
+            <div class="flex-fill">
+              <label class="mb-1 d-block">{this.t("general.group")}</label>
+              <select
+                class="form-select"
+                value={this.selectedGroup}
+                onChange={(e: Event) => {
+                  const sel = e.target as HTMLSelectElement;
+                  this.selectedGroup = sel.value;
+                }}
+              >
+                {/* Opsi default */}
+                <option disabled value="">
+                  {this.t("general.agroup")}
+                </option>
+                {this.groups.map((group) => (
+                  <option key={group.id} value={group.id}>
+                    {group.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div class="flex-fill">
+              <label class="mb-1 d-block">{this.t("general.friends")}</label>
+              <select class="form-select">
+                <option value="">{this.t("general.frien")}</option>
+                {this.currentMembers.map((member) => (
+                  <option key={member.id} value={member.id}>
+                    {member.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        ) : (
+          // Jika tab ekstra "pengguna", tampilkan select untuk Pengguna
+          <div class="mb-3">
+            <label class="mb-1 d-block">{this.t("general.users")}</label>
+            <select class="form-select">
+              <option value="">{this.t("general.select_user")}</option>
+              {this.staticUsers.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         {/* Card Favorit Surah */}
         <Card
@@ -216,6 +265,7 @@ export default defineComponent({
           }}
         </Card>
 
+        {/* Navigation Tab Utama untuk Surah, Juz, Halaman */}
         <div class="d-flex justify-content-between mb-3">
           <ul class="nav nav-pills mb-3">
             <li class="nav-item" onClick={() => (this.tab = "surah")}>
@@ -254,7 +304,9 @@ export default defineComponent({
             </div>
           )}
         </div>
-        {this.tab === "halaman" && (
+
+        {/* Konten Utama Berdasarkan Tab */}
+        {this.tab === "halaman" ? (
           <div class="mb-4">
             <div class="input-group" style="max-width: 350px;">
               <input
@@ -290,14 +342,11 @@ export default defineComponent({
               </button>
             </div>
           </div>
-        )}
-        {this.tab === "surah"
-          ? h(Surah, { sort: this.sort })
-          : this.tab === "juz"
-          ? h(Juz, { sort: this.sort })
-          : this.tab === "halaman"
-          ? h("div", {}, "")
-          : null}
+        ) : this.tab === "surah" ? (
+          h(Surah, { sort: this.sort })
+        ) : this.tab === "juz" ? (
+          h(Juz, { sort: this.sort })
+        ) : h("div", {}, "")}
       </MainLayout>
     );
   },
