@@ -284,7 +284,8 @@ export default defineComponent({
               </div>
             </li>
           </ul>
-          {this.tab !== "halaman" && (
+          {this.tab !== "halaman" &&  this.tab !== "juz" &&
+(
             <div class="my-auto">
               <small>
                 <span class="me-2">{this.t("sort.by")}:</span>
