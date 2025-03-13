@@ -81,22 +81,22 @@ export default defineComponent({
         id: "a",
         name: "Ubig 2025",
         members: [
-          { id: 1, name: "Fatkul Amri - 7678" },
-          { id: 2, name: "Asrori - 9809" },
-          { id: 3, name: "Masum - 9890" },
-          { id: 4, name: "Dimas - 6236" },
-          { id: 5, name: "Richo - 2354" },
+          { value: 7678, name: "Fatkul Amri " },
+          { value: 9809, name: "Asrori " },
+          { value: 9890, name: "Masum " },
+          { value: 6236, name: "Dimas " },
+          { value: 2354, name: "Richo " },
         ],
       },
       {
         id: "b",
         name: "Qurani 2025",
         members: [
-          { id: 6, name: "Galuh - 1221" },
-          { id: 7, name: "Kevin - 2827" },
-          { id: 8, name: "Dewa - 8723" },
-          { id: 9, name: "Niko - 9012" },
-          { id: 10, name: "Alvin - 8790" },
+          { value: 1221, name: "Galuh  " },
+          { value: 2827, name: "Kevin  " },
+          { value: 8723, name: "Dewa  " },
+          { value: 9012, name: "Niko  " },
+          { value: 8790, name: "Alvin  " },
         ],
       },
     ]);
@@ -110,11 +110,11 @@ export default defineComponent({
 
     // Data statis untuk 5 pengguna
     const staticUsers = ref([
-      { id: 1, name: "Alfian - 4538" },
-      { id: 2, name: "Lang - 7689" },
-      { id: 3, name: "Naufal - 7109" },
-      { id: 4, name: "Fauzan - 8145" },
-      { id: 5, name: "Tito - 9021" },
+      { value: 4538, name: "Alfian " },
+      { value: 7689, name: "Lang  " },
+      { value: 7109, name: "Naufal  " },
+      { value: 8145, name: "Fauzan " },
+      { value: 9021, name: "Tito " },
     ]);
 
     // Tab ekstra untuk mengatur tampilan Grup dan Pengguna
@@ -170,7 +170,7 @@ export default defineComponent({
                 }}
               >
                 {/* Opsi default */}
-                <option disabled value="">
+                <option  value="">
                   {this.t("general.agroup")}
                 </option>
                 {this.groups.map((group) => (
@@ -185,7 +185,7 @@ export default defineComponent({
               <select class="form-select">
                 <option value="">{this.t("general.frien")}</option>
                 {this.currentMembers.map((member) => (
-                  <option key={member.id} value={member.id}>
+                  <option key={member.value} value={member.value}>
                     {member.name}
                   </option>
                 ))}
@@ -199,7 +199,7 @@ export default defineComponent({
             <select class="form-select">
               <option value="">{this.t("general.select_user")}</option>
               {this.staticUsers.map((user) => (
-                <option key={user.id} value={user.id}>
+                <option key={user.value} value={user.value}>
                   {user.name}
                 </option>
               ))}
