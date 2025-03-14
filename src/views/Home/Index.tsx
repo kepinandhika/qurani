@@ -12,7 +12,7 @@ import historyReplaceState from "@/helpers/history-replace-state";
 import collect from "collect.js";
 import toast from "@/lib/toast";
 
-type Tab = "surah" | "juz" | "halaman";
+type Tab = "surah" | "juz" | "page";
 
 export default defineComponent({
   setup() {
@@ -54,7 +54,7 @@ export default defineComponent({
         .toArray();
     });
 
-    if (["surah", "juz", "halaman"].includes(route.query.tab as string)) {
+    if (["surah", "juz", "page"].includes(route.query.tab as string)) {
       tab.value = route.query.tab as Tab;
     }
     watch(tab, (value) => {
@@ -278,13 +278,13 @@ export default defineComponent({
                 {this.t("general.juz")}
               </div>
             </li>
-            <li class="nav-item" onClick={() => (this.tab = "halaman")}>
-              <div class={["nav-link cursor-pointer", { active: this.tab == "halaman" }]}>
+            <li class="nav-item" onClick={() => (this.tab = "page")}>
+              <div class={["nav-link cursor-pointer", { active: this.tab == "page" }]}>
                 {this.t("general.halaman")}
               </div>
             </li>
           </ul>
-          {this.tab !== "halaman" &&  this.tab !== "juz" &&
+          {this.tab !== "page" &&  this.tab !== "juz" &&
 (
             <div class="my-auto">
               <small>
@@ -307,9 +307,9 @@ export default defineComponent({
         </div>
 
         {/* Konten Utama Berdasarkan Tab */}
-        {this.tab === "halaman" ? (
+        {this.tab === "page" ? (
           <div class="mb-4">
-            <div class="input-group" style="max-width: 350px;">
+            <div class="input-group" style="max-width: 240px;">
               <input
                 type="number"
                 class="form-control"
