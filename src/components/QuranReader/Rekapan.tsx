@@ -2,7 +2,7 @@ import router from "@/routes";
 import { defineComponent, ref, computed, onMounted, reactive } from "vue";
 
 interface MarkedError {
-  word: any; // Jika Anda memiliki tipe khusus (misalnya Words), sesuaikan di sini
+  word: any;
   Kesalahan: string;
   verseNumber: number;
   chapterName: string;
@@ -27,14 +27,14 @@ export default defineComponent({
       }
     });
 
-    const verseErrorCounts = computed(() => {
-      const counts: Record<string, number> = {};
-      markedErrors.value.forEach((err) => {
-        if (err.isVerseError) {
-          counts[err.Kesalahan] = (counts[err.Kesalahan] || 0) + 1;
-        }
-      });
-      return counts;
+    const verseErrors = computed(() => {
+      return markedErrors.value
+        .filter((err) => err.isVerseError)
+        .map((err) => ({
+          surah: err.chapterName,
+          ayat: err.verseNumber,
+          jenisKesalahan: err.Kesalahan
+        }));
     });
 
     const wordErrorCounts = computed(() => {
@@ -47,41 +47,34 @@ export default defineComponent({
       return counts;
     });
 
-    // Fungsi submit rekapan, yang menggabungkan data input pengguna dan hasil perhitungan kesalahan
     function submitRecap() {
       const recapPayload = {
         namaPenyimak: recapData.namaPenyimak,
         kesimpulan: recapData.kesimpulan,
         catatan: recapData.catatan,
-        verseErrorCounts: verseErrorCounts.value,
+        verseErrors: verseErrors.value,
         wordErrorCounts: wordErrorCounts.value
       };
       console.log("Recap submitted:", recapPayload);
-
-      // Simpan data ke localStorage atau sessionStorage
       localStorage.setItem("recapData", JSON.stringify(recapPayload));
-
-      // Navigasi ke halaman HasilRekapan tanpa mengirim data melalui URL
       router.push("/HasilRekapan");
     }
 
-    // Fungsi untuk kembali ke halaman sebelumnya
     function goBack() {
-      router.go(-1); // Kembali ke halaman sebelumnya
+      router.go(-1);
     }
 
     return {
       recapData,
-      verseErrorCounts,
+      verseErrors,
       wordErrorCounts,
       submitRecap,
-      goBack // Tambahkan fungsi goBack ke return
+      goBack
     };
   },
   render() {
     return (
       <div class="container my-4">
-        {/* Tombol Kembali di pojok kiri atas */}
         <button class="btn btn-link mb-3" style="text-decoration:none;" onClick={this.goBack}>
           <i class="bi bi-arrow-left"></i> Kembali
         </button>
@@ -97,16 +90,22 @@ export default defineComponent({
               placeholder="Masukkan nama penyimak"
             />
           </div>
-          
+
           <div class="mb-3">
-            <h4>Rekapan Ayat:</h4>
-            <ul class="list-group">
-              {Object.entries(this.verseErrorCounts).map(([error, count]) => (
-                <li class="list-group-item d-flex justify-content-between">
-                  <span>{error}</span> <span class="badge bg-danger">{count}</span>
-                </li>
-              ))}
-            </ul>
+            <h4>Rekapan Kesalahan Ayat:</h4>
+            {this.verseErrors.length === 0 ? (
+              <p class="text-muted">Tidak ada kesalahan ayat.</p>
+            ) : (
+              <ul class="list-group">
+                {this.verseErrors.map((err, index) => (
+                  <li key={index} class="list-group-item">
+                    <strong>Surah {err.surah}, Ayat {err.ayat}</strong>  
+                    <br />
+                    Kesalahan: <span class="badge bg-danger">{err.jenisKesalahan}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
           
           <div class="mb-3">
@@ -119,7 +118,7 @@ export default defineComponent({
               ))}
             </ul>
           </div>
-          
+
           <div class="mb-3">
             <label class="form-label">Kesimpulan:</label>
             <select 
