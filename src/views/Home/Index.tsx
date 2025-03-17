@@ -163,6 +163,7 @@ export default defineComponent({
               <label class="mb-1 d-block">{this.t("general.group")}</label>
               <select
                 class="form-select"
+                style="max-width:400px"
                 value={this.selectedGroup}
                 onChange={(e: Event) => {
                   const sel = e.target as HTMLSelectElement;
@@ -182,7 +183,9 @@ export default defineComponent({
             </div>
             <div class="flex-fill">
               <label class="mb-1 d-block">{this.t("general.friends")}</label>
-              <select class="form-select">
+              <select class="form-select"
+              style="max-width:400px">
+                
                 <option value="">{this.t("general.frien")}</option>
                 {this.currentMembers.map((member) => (
                   <option key={member.value} value={member.value}>
@@ -196,7 +199,7 @@ export default defineComponent({
           // Jika tab ekstra "pengguna", tampilkan select untuk Pengguna
           <div class="mb-3">
             <label class="mb-1 d-block">{this.t("general.users")}</label>
-            <select class="form-select">
+            <select class="form-select" style="max-width:400px">
               <option value="">{this.t("general.select_user")}</option>
               {this.staticUsers.map((user) => (
                 <option key={user.value} value={user.value}>
