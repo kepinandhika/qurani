@@ -61,6 +61,8 @@ export type Words = {
     char_type_name: "word" | "end",
     location: string,
     page_number: number,
+    chapterName: any,
+    verseNumber: any,
     position: number,
     text: string,
     text_uthmani: string,
