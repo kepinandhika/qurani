@@ -47,6 +47,33 @@ export default defineComponent({
       return counts;
     });
 
+    // Mapping warna kesalahan berdasarkan jenisnya
+    function getErrorColor(error: string): string {
+      const colorMap: Record<string, string> = {
+        // Untuk kesalahan kata
+        "Gharib": "#CCCCCC",
+        "Ghunnah": "#99CCFF",
+        "Harokat Tertukar": "#DFF18F",
+        "Huruf Tambah/Kurang": "#F4ACB6",
+        "Lupa (tidak dibaca)": "#FA7656",
+        "Mad (panjang pendek)": "#FFCC99",
+        "Makhroj (pengucapan huruf)": "#F4A384",
+        "Nun Mati dan Tanwin": "#F8DD74",
+        "Qalqalah (memantul)": "#D5B6D4",
+        "Tasydid (penekanan)": "#B5C9DF",
+        "Urutan Huruf atau Kata": "#FE7D8F",
+        "Waqof atau Washol (berhenti atau lanjut)": "#A1D4CF",
+        "Waqof dan Ibtida (berhenti dan memulai)": "#90CBAA",
+        "Lainnya": "#CC99CC",
+        // Untuk kesalahan ayat
+        "Ayat Lupa (tidak dibaca)": "#FA7656",
+        "Ayat Waqof atau Washol (berhenti atau lanjut)": "#FE7D8F",
+        "Ayat Waqof dan Ibtida (berhenti dan memulai)": "#90CBAA",
+        "LainNya": "#CC99CC"
+      };
+      return colorMap[error] || "#6c757d"; // default gray jika tidak ditemukan
+    }
+
     function submitRecap() {
       const recapPayload = {
         namaPenyimak: recapData.namaPenyimak,
@@ -69,7 +96,8 @@ export default defineComponent({
       verseErrors,
       wordErrorCounts,
       submitRecap,
-      goBack
+      goBack,
+      getErrorColor
     };
   },
   render() {
@@ -101,7 +129,19 @@ export default defineComponent({
                   <li key={index} class="list-group-item">
                     <strong>Surah {err.surah}, Ayat {err.ayat}</strong>  
                     <br />
-                    Kesalahan: <span class="badge bg-danger">{err.jenisKesalahan}</span>
+                    Kesalahan:{" "}
+                    <span 
+                      class="badge" 
+                      style={{
+                        backgroundColor: this.getErrorColor(err.jenisKesalahan),
+                        borderWidth: "2px",
+                        fontWeight: "500",
+                        textAlign: "left",
+                        color: "#000000"
+                      }}
+                    >
+                      {err.jenisKesalahan}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -113,7 +153,19 @@ export default defineComponent({
             <ul class="list-group">
               {Object.entries(this.wordErrorCounts).map(([error, count]) => (
                 <li class="list-group-item d-flex justify-content-between">
-                  <span>{error}</span> <span class="badge bg-warning">{count}</span>
+                  <span>{error}</span> 
+                  <span 
+                    class="badge" 
+                    style={{
+                      backgroundColor: this.getErrorColor(error),
+                      borderWidth: "2px",
+                      fontWeight: "500",
+                      textAlign: "left",
+                      color: "#000000"
+                    }}
+                  >
+                    {count}
+                  </span>
                 </li>
               ))}
             </ul>
