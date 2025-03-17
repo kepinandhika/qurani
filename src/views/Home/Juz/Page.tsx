@@ -1,55 +1,79 @@
-import { Chapters, Sort } from "@/types";
 import { useChapters } from "@/hooks/chapters";
-import { PropType, computed, defineComponent } from "vue";
+import { useHttpRetry } from "@/hooks/http";
+import { defineComponent, PropType, ref, computed } from "vue";
+import { Juzs, Chapters, Sort } from "@/types";
+import { makeUrl } from "@/helpers/api";
 import collect from "collect.js";
 import styles from "../Style.module.scss";
 import Icon from "@/components/Icon/Icon";
 
+type Data = (Juzs & { chapters: Chapters[] })[];
+
 export default defineComponent({
-    props: {
-        sort: {
-            type: String as PropType<Sort>,
-            required: true
-        }
+  props: {
+    sort: {
+      type: String as PropType<Sort>,
+      required: true,
     },
-    setup(props) {
-        const chapters = useChapters();
-        const data = computed<Chapters[]>(() => {
-            const collection = collect(chapters.data.value)
-                .filter(chapter => chapter.id <= 30); // Ambil hanya id sampai 30
-            
-            return (props.sort == "desc"
-                ? collection.sortByDesc("id")
-                : collection.sortBy("id")).toArray();
-        });
-        
-        return {
-            data,
-        }
-    },
-    render() {
-        return (
-            <div class="d-flex flex-wrap gap-2">  
-                {this.data.map(chapter => (
-                    <div
-                        key={chapter.id}
-                        class={[styles.card_chapter, styles.border_radius_1rem]}
-                        style={{ width: "82px",}} 
-                        onClick={() => this.$router.push({name: "chapter", params: {id: chapter.id}})}
-                    >
-                        <div class="d-flex justify-content-between h-100">
-                            <div class="d-flex align-items-center">
-                                <div class="me-1 position-relative d-flex align-items-center text-center">
-                                    <Icon class={styles.svg_icon} name="stars-islamic" width={60} height={60} />
-                                    <span class="fw-bold h6 position-absolute text-primary" style="transform: translate(-50%, -50%);left: 50%;top: 50%">
-                                        {chapter.id}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>  
-                    </div>
-                ))}
-            </div>
-        )
+  },
+  async setup(props) {
+    const juzs_response = ref<Data>([]);
+    const httpRetry = useHttpRetry();
+    const chapters = useChapters();
+
+    const juzs = ref<Data>([]);
+
+    juzs_response.value = (
+      await httpRetry.get<{ juzs: Juzs[] }>(makeUrl("juzs"), { delay: 1000 })
+    ).data.juzs.map((item) => ({
+      ...item,
+      chapters: Object.keys(item.verse_mapping)
+        .map((id) => chapters.find(Number(id)))
+        .filter((item) => item !== null) as Chapters[],
+    }));
+
+    // Removing duplicates
+    for (let i = 1; i <= 30; i++) {
+      juzs.value.push(juzs_response.value.filter((item) => item.id == i)[0] || null);
     }
+
+    const data = computed<Data>(() => {
+      const collection = collect(juzs.value);
+      return (
+        props.sort == "desc"
+          ? collection.sortByDesc("id")
+          : collection.sortBy("id")
+      ).toArray();
+    });
+
+    return {
+      data,
+    };
+  },
+  render() {
+    console.log(this.data);
+    return (
+      <div class="d-flex flex-wrap gap-2">  
+          {this.data.map(chapter => (
+              <div
+                  key={chapter.id}
+                  class={[styles.card_chapter, styles.border_radius_1rem]}
+                  style={{ width: "82px",}} 
+                  onClick={() => this.$router.push({ name: "juz", params: { id: chapter.id } })}
+              >
+                  <div class="d-flex justify-content-between h-100">
+                      <div class="d-flex align-items-center">
+                          <div class="me-1 position-relative d-flex align-items-center text-center">
+                              <Icon class={styles.svg_icon} name="stars-islamic" width={60} height={60} />
+                              <span class="fw-bold h6 position-absolute text-primary" style="transform: translate(-50%, -50%);left: 50%;top: 50%">
+                                  {chapter.id}
+                              </span>
+                          </div>
+                      </div>
+                  </div>  
+              </div>
+          ))}
+      </div>
+    )
+  }
 });

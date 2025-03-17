@@ -4,24 +4,37 @@ import styles from "../Style.module.scss";
 
 export default defineComponent({
     setup() {
-        return () => [2, 1, 2, 2, 4].map((v, i) => (
-            <div key={i} class="card mb-2">
-                <div class="card-header d-flex justify-content-center border-0">
-                    <Skeleton width="100px" height="20px" borderRadius="5px" />
-                </div>
-                <div class="card-body">
-                    <div class={styles.juz_container}>
-                        {Array(v).fill(0).map((_, key) => (
+        return () => (
+            <div 
+                class={styles.juz_container} 
+                style={{ 
+                    display: "flex", 
+                    flexDirection: "column", 
+                    gap: "8px"
+                }}
+            >
+                {Array(2).fill(0).map((_, rowIndex) => (
+                    <div 
+                        key={rowIndex}
+                        style={{ 
+                            display: "flex", 
+                            gap: "8px", 
+                            flexWrap: "nowrap", 
+                            overflowX: "auto" 
+                        }}
+                    >
+                        {Array(4).fill(0).map((_, colIndex) => (
                             <Skeleton
-                                key={key}
-                                class={styles.card_chapter_skeleton}
-                                width="100%"
-                                height="80px"
+                                key={colIndex}
+                                class={[styles.card_chapter, styles.border_radius_1rem]}
+                                width="82px"
+                                height="82px"
+                                style={{ minWidth: "82px", minHeight: "82px" }}
                             />
                         ))}
                     </div>
-                </div>
+                ))}
             </div>
-        ))
+        );
     }
-})
+});

@@ -1,4 +1,4 @@
-import { defineComponent, ref, onMounted, Teleport, computed, watch, Transition, onBeforeUnmount } from "vue";
+import { defineComponent, ref, onMounted, Teleport, computed, watch, Transition, onBeforeUnmount, Fragment } from "vue";
 import { useEventListener } from "@vueuse/core";
 import { useState } from "@/hooks/state";
 import styles from "./Layout.module.scss";
@@ -38,6 +38,18 @@ export default defineComponent({
         showScrollIndicator: {
             type: Boolean,
             default: false
+        },
+        class: {
+            type: String,
+            default: ""
+        },
+        showNavbar: {
+            type: Boolean,
+            default: true
+        },
+        showFooter: {
+            type: Boolean,
+            default: true
         }
     },
     setup(props) {
@@ -51,7 +63,7 @@ export default defineComponent({
         const isLoggedIn = ref<boolean>(false); // State untuk menyimpan status login
 
         // Ref untuk mengatur visibilitas navbar berdasarkan aktivitas scroll
-        const showNavbar = ref<boolean>(true);
+        const isNavbarVisible = ref<boolean>(true);
         let hideNavbarTimeout: number | null = null;
 
         // Cek status login saat komponen dimount
@@ -117,9 +129,9 @@ export default defineComponent({
             if (hideNavbarTimeout !== null) {
                 clearTimeout(hideNavbarTimeout);
             }
-            showNavbar.value = true;
+            isNavbarVisible.value = true;
             hideNavbarTimeout = window.setTimeout(() => {
-                showNavbar.value = false;
+                isNavbarVisible.value = false;
             }, 10000000);
 
             oldScroll = window.scrollY;
@@ -160,13 +172,13 @@ export default defineComponent({
             isLoggedIn,
             logout,
             gotoBookmark,
-            showNavbar // expose untuk digunakan di render
+            isNavbarVisible // expose untuk digunakan di render
         }
     },
     render() {
         return (
-            <>
-                <nav class={["sidebar", { close: !this.showSidebar }]}>
+            <Fragment>
+                <nav class={["sidebar", { close: !this.showSidebar }, this.class]}>
                     <ul class="sidebar-menu">
                         {SIDBAR_MENU.map((item, key) => (
                             <li
@@ -186,7 +198,7 @@ export default defineComponent({
                         ))}
                     </ul>
                 </nav>
-                {this.showNavbar && (
+                {this.isNavbarVisible && this.showNavbar && (
                     <nav ref="navbar" class={[
                         "navbar",
                         styles.navbar,
@@ -245,13 +257,16 @@ export default defineComponent({
                                                             />
                                                         </Tooltip>
                                                     </div>
+                                                    
                                                 ) : (
-                                                    // Tombol Login jika belum login
-                                                    <div
-                                                        
-                                                    >
-                                                      
-                                                    </div>
+                                                    // Tombol Login jika belum login (atau tombol friend sesuai route "friend")
+                                                    <Fragment>
+                                                        <div
+                                                            
+                                                            onClick={() => this.gotoRoute("friend")}
+                                                        >                                                        
+                                                        </div>
+                                                    </Fragment>
                                                 )}
                                                 <div class={["me-0", styles.nav_menu_item]} onClick={() => this.showSearchChapters = true}>
                                                     <Tooltip title={this.$t("general.search-surah")}>
@@ -301,8 +316,8 @@ export default defineComponent({
                     <SearchChapters v-model:show={this.showSearchChapters} />
                 </Teleport>
 
-                {this.$slots.footer?.()}
-            </>
+                {this.showFooter && this.$slots.footer?.()}
+            </Fragment>
         );
     }
 });
