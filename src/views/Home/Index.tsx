@@ -139,76 +139,72 @@ export default defineComponent({
   render() {
     return (
       <MainLayout>
-        {/* Navigation Tab Ekstra untuk Grup dan Pengguna (diletakkan di atas Card Favorit Surah) */}
-        <div class="d-flex justify-content-start mb-3">
-          <ul class="nav nav-pills">
-            <li class="nav-item" onClick={() => (this.extraTab = "grup")}>
-              <div class={["nav-link cursor-pointer", { active: this.extraTab === "grup" }]}>
-                {this.t("general.group")}
-              </div>
-            </li>
-            <li class="nav-item" onClick={() => (this.extraTab = "pengguna")}>
-              <div class={["nav-link cursor-pointer", { active: this.extraTab === "pengguna" }]}>
-                {this.t("general.users")}
-              </div>
-            </li>
-          </ul>
-        </div>
+ {/* Navigation Tab Ekstra untuk Grup dan Pengguna (diletakkan di atas Card Favorit Surah) */}
+<div class="d-flex justify-content-start mb-3">
+  <ul class="nav nav-pills">
+    <li class="nav-item" onClick={() => (this.extraTab = "grup")}>
+      <div class={["nav-link cursor-pointer", { active: this.extraTab === "grup" }]}>
+        {this.t("general.group")}
+      </div>
+    </li>
+    <li class="nav-item" onClick={() => (this.extraTab = "pengguna")}>
+      <div class={["nav-link cursor-pointer", { active: this.extraTab === "pengguna" }]}>
+        {this.t("general.users")}
+      </div>
+    </li>
+  </ul>
+</div>
 
-        {/* Konten berdasarkan Extra Tab */}
-        {this.extraTab === "grup" ? (
-          // Jika tab ekstra "grup", tampilkan select untuk Grup dan Anggota (Friends)
-          <div class="d-flex gap-3 mb-3">
-            <div class="flex-fill">
-              <label class="mb-1 d-block">{this.t("general.group")}</label>
-              <select
-                class="form-select"
-                style="max-width:400px"
-                value={this.selectedGroup}
-                onChange={(e: Event) => {
-                  const sel = e.target as HTMLSelectElement;
-                  this.selectedGroup = sel.value;
-                }}
-              >
-                {/* Opsi default */}
-                <option  value="">
-                  {this.t("general.agroup")}
-                </option>
-                {this.groups.map((group) => (
-                  <option key={group.id} value={group.id}>
-                    {group.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div class="flex-fill">
-              <label class="mb-1 d-block">{this.t("general.friends")}</label>
-              <select class="form-select"
-              style="max-width:400px">
-                
-                <option value="">{this.t("general.frien")}</option>
-                {this.currentMembers.map((member) => (
-                  <option key={member.value} value={member.value}>
-                    {member.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        ) : (
-          // Jika tab ekstra "pengguna", tampilkan select untuk Pengguna
-          <div class="mb-3">
-            <label class="mb-1 d-block">{this.t("general.users")}</label>
-            <select class="form-select" style="max-width:400px">
-              <option value="">{this.t("general.select_user")}</option>
-              {this.staticUsers.map((user) => (
-                <option key={user.value} value={user.value}>
-                  {user.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+{/* Konten berdasarkan Extra Tab */}
+{this.extraTab === "grup" ? (
+  // Jika tab ekstra "grup", tampilkan select untuk Grup dan Anggota (Friends)
+  <div class="d-flex align-items-end gap-2 mb-3">
+    <div>
+      <label class="mb-1 d-block">{this.t("general.group")}</label>
+      <select
+        class="form-select"
+        style="max-width:300px"
+        value={this.selectedGroup}
+        onChange={(e: Event) => {
+          const sel = e.target as HTMLSelectElement;
+          this.selectedGroup = sel.value;
+        }}
+      >
+        {/* Opsi default */}
+        <option value="">{this.t("general.agroup")}</option>
+        {this.groups.map((group) => (
+          <option key={group.id} value={group.id}>
+            {group.name}
+          </option>
+        ))}
+      </select>
+    </div>
+    <div>
+      <label class="mb-1 d-block">{this.t("general.friends")}</label>
+      <select class="form-select" style="max-width:300px">
+        <option value="">{this.t("general.frien")}</option>
+        {this.currentMembers.map((member) => (
+          <option key={member.value} value={member.value}>
+            {member.name}
+          </option>
+        ))}
+      </select>
+    </div>
+  </div>
+) : (
+  // Jika tab ekstra "pengguna", tampilkan select untuk Pengguna
+  <div class="mb-3">
+    <label class="mb-1 d-block">{this.t("general.users")}</label>
+    <select class="form-select" style="max-width:200px">
+      <option value="">{this.t("general.select_user")}</option>
+      {this.staticUsers.map((user) => (
+        <option key={user.value} value={user.value}>
+          {user.name}
+        </option>
+      ))}
+    </select>
+  </div>
+)}
 
         {/* Card Favorit Surah */}
         <Card
