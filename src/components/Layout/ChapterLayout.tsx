@@ -27,36 +27,30 @@ export default defineComponent({
         classNav: {
             type: String,
             default: "",
-          },
-          classFooter: {
+        },
+        classFooter: {
             type: String,
             default: "",
-          },
-          class: {
+        },
+        class: {
             type: String,
             default: "",
-          },
+        },
     },
     setup(props) {
         const [show, toggle] = useToggle<boolean>(false);
         const chapters = useChapters();
-        const search = ref<{chapter: string, ayah: number | null}>({chapter: "", ayah: null});
+        const search = ref<{ chapter: string, ayah: number | null }>({ chapter: "", ayah: null });
         const root = ref<HTMLElement | null>(null);
         const router = useRouter();
         const { translateMode } = useQuranReader();
-        const isCompleted = ref(false);
 
         const handleClick = () => {
-            if (isCompleted.value) {
-                router.push('/Rekapan'); 
-            } else {
-               
-                isCompleted.value = true;
-            }
+            router.push('/Rekapan');
         };
 
         const versesNumber = computed<number[]>(() => {
-            return Array(props.chapter.verses_count).fill(0).map((_, index) => index+1);
+            return Array(props.chapter.verses_count).fill(0).map((_, index) => index + 1);
         });
 
         const filteredChapters = computed<Chapters[]>(() => {
@@ -79,9 +73,8 @@ export default defineComponent({
                             wrapper.scrollTop = (el as HTMLElement).offsetTop - 400;
                         }
                     }
-                    
                 }
-            })
+            });
         });
 
         watch(() => [props.chapter.id, show.value].toString(), () => {
@@ -94,9 +87,8 @@ export default defineComponent({
                             wrapper.scrollTop = (el as HTMLElement).offsetTop - 400;
                         }
                     }
-                    
                 }
-            })
+            });
         });
         
         return {
@@ -107,20 +99,18 @@ export default defineComponent({
             filteredAyah,
             root,
             handleClick,
-            translateMode,
-            isCompleted
-
-        }
+            translateMode
+        };
     },
     render() {
         return (
             <MainLayout 
-                    showScrollIndicator 
-                    fixed 
-                    class={this.class}
-                    showNavbar={!this.classNav.includes('d-none')}
-                    showFooter={!this.classFooter.includes('d-none')}
-                  >
+                showScrollIndicator 
+                fixed 
+                class={this.class}
+                showNavbar={!this.classNav.includes('d-none')}
+                showFooter={!this.classFooter.includes('d-none')}
+            >
                 {{
                     navSection: () => (
                         <div class="ps-2 pe-2">
@@ -137,9 +127,7 @@ export default defineComponent({
                                     <div class="d-flex justify-content-center align-items-center cursor-pointer"
                                         style={{ width: "5%", textAlign: "center", padding: "5px" }} 
                                         onClick={this.handleClick}>
-                                        <span class={this.isCompleted ? "text-primary fw-bold" : "text-primary fw-bold"}>
-                                            {this.isCompleted ? "SELESAI" : "MULAI"}
-                                        </span>
+                                        <span class="text-primary fw-bold">SELESAI</span>
                                     </div>
                                 )}
                                 <div class="cursor-pointer d-flex align-items-center" onClick={() => this.toggle()}>
@@ -155,18 +143,18 @@ export default defineComponent({
                             enterActiveClass={styles.animate_in}
                             leaveActiveClass={styles.animate_out}
                             onBeforeLeave={(el) => {
-                                el.classList.remove(styles.active)
+                                el.classList.remove(styles.active);
                             }}
                             onAfterEnter={(el) => {
-                                el.classList.add(styles.active)
+                                el.classList.add(styles.active);
                             }}
                         >
                             {this.show && (
-                                <div ref="root" class={styles.container} onClick={((e: Event) => {
+                                <div ref="root" class={styles.container} onClick={(e: Event) => {
                                     if ((e.target as HTMLElement).classList.contains(styles.card_container)) {
-                                        this.show = false
+                                        this.show = false;
                                     }
-                                })}>
+                                }}>
                                     <div class={styles.card_container}>
                                         <div class={["card", styles.card]}>
                                             <div class={["card-header d-flex justify-content-between", styles.card_header]}>
@@ -182,7 +170,7 @@ export default defineComponent({
                                                             <Input
                                                                 class="text-center"
                                                                 v-model={this.search.chapter}
-                                                                {...{placeholder: this.$t("general.search-surah")}}
+                                                                {...{ placeholder: this.$t("general.search-surah") }}
                                                             />
                                                         </div>
                                                         <div class={["hide-scrollbar", styles.list_items]} data-name="chapter">
@@ -192,9 +180,9 @@ export default defineComponent({
                                                                         <div
                                                                             key={chapter.id}
                                                                             data-chapter-id={chapter.id}
-                                                                            class={["list-group-item list-group-item-action border-0", styles.item, {active: (this.$route.params.id as unknown) == chapter.id}]}
+                                                                            class={["list-group-item list-group-item-action border-0", styles.item, { active: (this.$route.params.id as unknown) == chapter.id }]}
                                                                             onClick={() => {
-                                                                                this.$router.push({name: "chapter", params: {id: chapter.id}})
+                                                                                this.$router.push({ name: "chapter", params: { id: chapter.id } });
                                                                             }}
                                                                         >
                                                                             <span class={"me-1 fw-bold"}>{chapter.id}</span>
@@ -214,7 +202,7 @@ export default defineComponent({
                                                             <Input
                                                                 class="text-center"
                                                                 v-model={this.search.ayah}
-                                                                {...{placeholder: this.$t("general.search-ayah"), type: "number"}}
+                                                                {...{ placeholder: this.$t("general.search-ayah"), type: "number" }}
                                                             />
                                                         </div>
                                                         <div class={["hide-scrollbar", styles.list_items]} data-name="ayah">
@@ -224,7 +212,7 @@ export default defineComponent({
                                                                         <div
                                                                             key={number}
                                                                             data-ayah={number}
-                                                                            class={["list-group-item list-group-item-action border-0", styles.item, {active: this.activeAyah === number}]}
+                                                                            class={["list-group-item list-group-item-action border-0", styles.item, { active: this.activeAyah === number }]}
                                                                             onClick={() => this.$emit("clickAyah", number)}
                                                                         >
                                                                             <div class="text-center">{number}</div>
@@ -249,6 +237,6 @@ export default defineComponent({
                     default: this.$slots.default
                 }}
             </MainLayout>
-        )
+        );
     }
-})
+});
