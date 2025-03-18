@@ -18,8 +18,10 @@ export default defineComponent({
       kesimpulan: "",
       catatan: "",
       namapeserta: "",
-      surahDibaca: "" 
+      surahDibaca: ""
     });
+    // Variabel untuk menampilkan notifikasi setelah pengiriman
+    const submissionNotification = ref("");
 
     // Data default untuk penyimak
     const defaultPenyimak = { value: 2378, name: "Fatkul Amri" };
@@ -29,7 +31,6 @@ export default defineComponent({
       const data = localStorage.getItem("markedErrors");
       if (data) {
         markedErrors.value = JSON.parse(data);
-       
       }
       // Set nama penyimak default jika belum ada isian
       if (!recapData.namaPenyimak) {
@@ -40,10 +41,10 @@ export default defineComponent({
       if (participantName) {
         recapData.namapeserta = participantName;
       }
+      // Jika terdapat data kesalahan, tetapkan surah dari kesalahan pertama
       if (markedErrors.value.length > 0) {
         recapData.surahDibaca = markedErrors.value[0].chapterName;
       }
-
     });
 
     const verseErrors = computed(() => {
@@ -99,12 +100,20 @@ export default defineComponent({
         verseErrors: verseErrors.value,
         wordErrorCounts: wordErrorCounts.value
       };
-    
+
       localStorage.setItem("recapData", JSON.stringify(recapPayload));
-      router.push("/HasilRekapan");
+      
+      // Tampilkan notifikasi bahwa data sudah terkirim
+      submissionNotification.value = "Recap berhasil terkirim!";
+      
+      // Perhatikan: Jangan menghapus data kesalahan di sini sehingga dialog kesalahan tetap tampil
+      // dan jangan diarahkan ke halaman lain.
     }
 
     function goBack() {
+      // Saat tombol kembali ditekan, hapus data kesalahan agar dialog kesalahan tidak muncul lagi di halaman sebelumnya.
+      localStorage.removeItem("markedErrors");
+      markedErrors.value = [];
       router.go(-1);
     }
 
@@ -114,7 +123,8 @@ export default defineComponent({
       wordErrorCounts,
       submitRecap,
       goBack,
-      getErrorColor
+      getErrorColor,
+      submissionNotification
     };
   },
   render() {
@@ -125,6 +135,14 @@ export default defineComponent({
         </button>
 
         <h2 class="mb-4 text-center">{this.$t("general.hasilrekap")}</h2>
+
+        {/* Tampilkan notifikasi jika sudah terkirim */}
+        {this.submissionNotification && (
+          <div class="alert alert-success" role="alert">
+            {this.submissionNotification}
+          </div>
+        )}
+
         <div class="card p-4 shadow-sm">
           {/* Field Nama Peserta (tidak dapat diubah) */}
           <div class="mb-3">
@@ -149,12 +167,11 @@ export default defineComponent({
             />
           </div>
           <div class="mb-3">
-            <label class="form-label">Surah yang dibaca : </label>
+            <label class="form-label">Surah yang dibaca:</label>
             <div class="card bg-white text-black p-2">
               <span>{this.recapData.surahDibaca}</span>
             </div>
           </div>
-
           <div class="mb-3">
             <h5>{this.$t("general.kesalahanayat")}</h5>
             {this.verseErrors.length === 0 ? (
@@ -226,14 +243,13 @@ export default defineComponent({
             <label class="form-label">{this.$t("general.catatan")}</label>
             <textarea
               class="form-control"
-              placeholder="Tambahkan catatan..."
+              style="text-opacity: 50%;"
+              placeholder="Catatan"
               v-model={this.recapData.catatan}
             ></textarea>
           </div>
           <div class="d-flex justify-content-end">
-            <button class="btn btn-primary" 
-            // onClick={this.submitRecap}
-            >
+            <button class="btn btn-primary" onClick={this.submitRecap}>
               {this.$t("general.kirim")}
             </button>
           </div>
