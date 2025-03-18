@@ -29,7 +29,7 @@ export default defineComponent({
       const data = localStorage.getItem("markedErrors");
       if (data) {
         markedErrors.value = JSON.parse(data);
-        console.log("Data kesalahan dimuat:", markedErrors.value);
+       
       }
       // Set nama penyimak default jika belum ada isian
       if (!recapData.namaPenyimak) {
@@ -99,7 +99,7 @@ export default defineComponent({
         verseErrors: verseErrors.value,
         wordErrorCounts: wordErrorCounts.value
       };
-      console.log("Recap submitted:", recapPayload);
+    
       localStorage.setItem("recapData", JSON.stringify(recapPayload));
       router.push("/HasilRekapan");
     }

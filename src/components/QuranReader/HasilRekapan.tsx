@@ -30,7 +30,6 @@ export default defineComponent({
       const data = localStorage.getItem("markedErrors");
       if (data) {
         markedErrors.value = JSON.parse(data);
-        console.log("Data kesalahan dimuat:", markedErrors.value);
       }
       // Set nama penyimak default jika belum ada isian
       if (!recapData.namaPenyimak) {
@@ -108,11 +107,12 @@ export default defineComponent({
     function generatePdf() {
       // Sembunyikan tombol-tombol yang tidak ingin tampil di PDF
       hideButtons();
-      const element = document.querySelector(".container");
+      // Casting untuk memastikan element bertipe HTMLElement
+      const element = document.querySelector(".container") as HTMLElement;
       if (element) {
         html2canvas(element).then((canvas) => {
           const imgData = canvas.toDataURL("image/png");
-          const pdf = new jsPDF("p", "mm", "a4"); // "p" = potrait, "a4" = ukuran A4
+          const pdf = new jsPDF("p", "mm", "a4"); // "p" = portrait, "a4" = ukuran A4
           const pdfWidth = pdf.internal.pageSize.getWidth();
           const pdfHeight = pdf.internal.pageSize.getHeight();
 
@@ -145,15 +145,15 @@ export default defineComponent({
         verseErrors: verseErrors.value,
         wordErrorCounts: wordErrorCounts.value
       };
-      console.log("Recap submitted:", recapPayload);
+
       localStorage.setItem("recapData", JSON.stringify(recapPayload));
 
       // Generate PDF sebelum berpindah halaman
       generatePdf();
 
-       // Hapus data kesalahan ayat sehingga tidak muncul lagi saat kembali ke halaman sebelumnya
-       localStorage.removeItem("markedErrors");
-       markedErrors.value = [];
+      // Hapus data kesalahan ayat sehingga tidak muncul lagi saat kembali ke halaman sebelumnya
+      localStorage.removeItem("markedErrors");
+      markedErrors.value = [];
 
       router.push("/HasilRekapan");
     }

@@ -51,7 +51,7 @@ export default defineComponent({
     };
   },
   render() {
-    console.log(this.data);
+    // console.log(this.data);
     return (
       <div class="d-flex flex-wrap gap-2">  
           {this.data.map(chapter => (

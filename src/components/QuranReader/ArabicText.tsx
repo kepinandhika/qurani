@@ -241,9 +241,9 @@ export default defineComponent({
     function saveMarkedErrors() {
       try {
         localStorage.setItem('markedErrors', JSON.stringify(markedErrors.value));
-        console.log('Data kesalahan berhasil disimpan:', markedErrors.value);
+        // console.log('Data kesalahan berhasil disimpan:', markedErrors.value);
       } catch (error) {
-        console.error("Gagal menyimpan data kesalahan:", error);
+        // console.error("Gagal menyimpan data kesalahan:", error);
       }
     }
 
@@ -304,7 +304,7 @@ export default defineComponent({
       const savedErrors = localStorage.getItem('markedErrors');
       if (savedErrors) {
         markedErrors.value = JSON.parse(savedErrors);
-        console.log('Auto refresh: Data kesalahan diperbarui.', markedErrors.value);
+        // console.log('Auto refresh: Data kesalahan diperbarui.', markedErrors.value);
       }
     }
     // Timer untuk auto refresh
@@ -315,7 +315,7 @@ export default defineComponent({
       const savedErrors = localStorage.getItem('markedErrors');
       if (savedErrors) {
         markedErrors.value = JSON.parse(savedErrors);
-        console.log('Data kesalahan dimuat:', markedErrors.value);
+        // console.log('Data kesalahan dimuat:', markedErrors.value);
       }
       window.addEventListener("keydown", handleKeydown);
       // Inisialisasi auto refresh setiap 30 detik
@@ -412,30 +412,30 @@ export default defineComponent({
         try {
           const data = localStorage.getItem('markedErrors');
           if (!data) {
-            console.log('Tidak ada data kesalahan yang tersimpan.');
+            // console.log('Tidak ada data kesalahan yang tersimpan.');
             return;
           }
           const errors = JSON.parse(data);
           const verseErrors = errors.filter((err: { isVerseError: any; }) => err.isVerseError);
           const wordErrors = errors.filter((err: { isVerseError: any; }) => !err.isVerseError);
           if (verseErrors.length > 0) {
-            console.log('Rekapan Kesalahan pada Ayat:');
+            // console.log('Rekapan Kesalahan pada Ayat:');
             verseErrors.forEach((error: { verseNumber: any; chapterName: any; Kesalahan: any; }, index: number) => {
-              console.log(`${index + 1}. Ayat ${error.verseNumber} (${error.chapterName}): ${error.Kesalahan}`);
+              //console.log(`${index + 1}. Ayat ${error.verseNumber} (${error.chapterName}): ${error.Kesalahan}`);
             });
           } else {
-            console.log('Tidak ada kesalahan pada ayat yang ditandai.');
+            //console.log('Tidak ada kesalahan pada ayat yang ditandai.');
           }
           if (wordErrors.length > 0) {
-            console.log('Rekapan Kesalahan pada Kata:');
+            //console.log('Rekapan Kesalahan pada Kata:');
             wordErrors.forEach((error: { word: { text_uthmani: any; position: any; }; verseNumber: any; chapterName: any; Kesalahan: any; }, index: number) => {
-              console.log(`${index + 1}. Kata "${error.word?.text_uthmani}" (Posisi: ${error.word?.position}, Ayat ${error.verseNumber}, ${error.chapterName}): ${error.Kesalahan}`);
+              //console.log(`${index + 1}. Kata "${error.word?.text_uthmani}" (Posisi: ${error.word?.position}, Ayat ${error.verseNumber}, ${error.chapterName}): ${error.Kesalahan}`);
             });
           } else {
-            console.log('Tidak ada kesalahan pada kata yang ditandai.');
+            //console.log('Tidak ada kesalahan pada kata yang ditandai.');
           }
         } catch (error) {
-          console.error("Gagal memuat rekapan data kesalahan:", error);
+          //console.error("Gagal memuat rekapan data kesalahan:", error);
         }
       }
     };
