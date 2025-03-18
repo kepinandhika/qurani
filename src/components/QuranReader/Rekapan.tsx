@@ -17,7 +17,8 @@ export default defineComponent({
       namaPenyimak: "",
       kesimpulan: "",
       catatan: "",
-      namapeserta: ""
+      namapeserta: "",
+      surahDibaca: "" 
     });
 
     // Data default untuk penyimak
@@ -39,6 +40,10 @@ export default defineComponent({
       if (participantName) {
         recapData.namapeserta = participantName;
       }
+      if (markedErrors.value.length > 0) {
+        recapData.surahDibaca = markedErrors.value[0].chapterName;
+      }
+
     });
 
     const verseErrors = computed(() => {
@@ -144,6 +149,13 @@ export default defineComponent({
             />
           </div>
           <div class="mb-3">
+            <label class="form-label">Surah yang dibaca : </label>
+            <div class="card bg-white text-black p-2">
+              <span>{this.recapData.surahDibaca}</span>
+            </div>
+          </div>
+
+          <div class="mb-3">
             <h5>{this.$t("general.kesalahanayat")}</h5>
             {this.verseErrors.length === 0 ? (
               <p class="text-muted">Tidak ada kesalahan ayat.</p>
@@ -219,7 +231,9 @@ export default defineComponent({
             ></textarea>
           </div>
           <div class="d-flex justify-content-end">
-            <button class="btn btn-primary" onClick={this.submitRecap}>
+            <button class="btn btn-primary" 
+            // onClick={this.submitRecap}
+            >
               {this.$t("general.kirim")}
             </button>
           </div>
