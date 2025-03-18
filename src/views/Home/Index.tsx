@@ -11,10 +11,20 @@ import Juz from "./Juz/Index";
 import historyReplaceState from "@/helpers/history-replace-state";
 import collect from "collect.js";
 import toast from "@/lib/toast";
+import vSelect from "vue-select-next";
+import "./index.css";
 
 type Tab = "surah" | "juz" | "page";
 
 export default defineComponent({
+  name: "CompleteComponent",
+  components: {
+    MainLayout,
+    Card,
+    vSelect,
+    Surah,
+    Juz,
+  },
   setup() {
     const route = useRoute();
     const router = useRouter();
@@ -49,7 +59,7 @@ export default defineComponent({
           return null;
         })
         .filter((item) => item !== null)
-        .sortByDesc((item: Bookmarks) => item.created_at)
+        .sortByDesc((item: Bookmarks) => item!.created_at)
         .toArray();
     });
 
@@ -98,15 +108,18 @@ export default defineComponent({
         ],
       },
     ]);
-    const selectedGroup = ref("");
+    // selectedGroup disimpan sebagai objek
+    const selectedGroup = ref<any>(null);
+    // selectedMember untuk memilih anggota dari grup
+    const selectedMember = ref<any>(null);
+    // Daftar anggota berdasarkan grup yang dipilih
     const currentMembers = computed(() => {
-      const group = groups.value.find((g) => g.id === selectedGroup.value);
+      if (!selectedGroup.value) return [];
+      const group = groups.value.find((g) => g.id === selectedGroup.value.id);
       return group ? group.members : [];
     });
 
-    // Untuk select anggota, kita simpan nilainya sebagai nama (agar konsisten dengan value option)
-    const selectedMember = ref("");
-    // Data statis untuk 5 pengguna; simpan juga nilainya sebagai nama
+    // Data statis untuk 5 pengguna
     const staticUsers = ref([
       { value: 4538, name: "Alfian" },
       { value: 7689, name: "Lang" },
@@ -114,15 +127,18 @@ export default defineComponent({
       { value: 8145, name: "Fauzan" },
       { value: 9021, name: "Tito" },
     ]);
-    const selectedUser = ref("");
+    const selectedUser = ref<any>(null);
 
     // Tab ekstra untuk mengatur tampilan Grup dan Pengguna
     const extraTab = ref<"grup" | "pengguna">("grup");
 
-    // Computed property untuk mendapatkan nama peserta sesuai dengan tab aktif
+    // Computed property untuk mendapatkan nama peserta sesuai tab aktif
     const selectedParticipant = computed(() => {
-      return extraTab.value === "grup" ? selectedMember.value : selectedUser.value;
+      return extraTab.value === "grup"
+        ? selectedMember.value?.name || ""
+        : selectedUser.value?.name || "";
     });
+    // Simpan nilai peserta ke localStorage agar bisa diambil di halaman rekapan
     watch(selectedParticipant, (newVal) => {
       localStorage.setItem("participantName", newVal);
     });
@@ -138,8 +154,8 @@ export default defineComponent({
       extraTab,
       groups,
       selectedGroup,
-      currentMembers,
       selectedMember,
+      currentMembers,
       staticUsers,
       selectedUser,
       selectedParticipant,
@@ -152,12 +168,22 @@ export default defineComponent({
         <div class="d-flex justify-content-start mb-3">
           <ul class="nav nav-pills">
             <li class="nav-item" onClick={() => (this.extraTab = "grup")}>
-              <div class={["nav-link cursor-pointer", { active: this.extraTab === "grup" }]}>
+              <div
+                class={[
+                  "nav-link cursor-pointer",
+                  { active: this.extraTab === "grup" },
+                ]}
+              >
                 {this.t("general.group")}
               </div>
             </li>
             <li class="nav-item" onClick={() => (this.extraTab = "pengguna")}>
-              <div class={["nav-link cursor-pointer", { active: this.extraTab === "pengguna" }]}>
+              <div
+                class={[
+                  "nav-link cursor-pointer",
+                  { active: this.extraTab === "pengguna" },
+                ]}
+              >
                 {this.t("general.users")}
               </div>
             </li>
@@ -166,76 +192,62 @@ export default defineComponent({
 
         {/* Konten berdasarkan Extra Tab */}
         {this.extraTab === "grup" ? (
-          <div class="d-flex align-items-end gap-2 mb-3">
-            <div>
-              <label class="mb-1 d-block">{this.t("general.group")}</label>
-              <select
-                class="form-select"
-                style="max-width:300px"
-                value={this.selectedGroup}
-                onChange={(e: Event) => {
-                  const target = e.target as HTMLSelectElement;
-                  this.selectedGroup = target.value;
-                  // Reset pilihan anggota saat grup berubah
-                  this.selectedMember = "";
-                }}
-              >
-                <option value="">{this.t("general.agroup")}</option>
-                {this.groups.map((group) => (
-                  <option key={group.id} value={group.id}>
-                    {group.name}
-                  </option>
-                ))}
-              </select>
+          <div class="d-flex flex-wrap align-items-end gap-3 mb-4">
+            <div class="flex-grow-1" style="min-width: 200px; max-width: 300px;">
+              <label class="mb-2 d-block font-weight-medium">
+                {this.t("general.group")}
+              </label>
+              <vSelect
+                modelValue={this.selectedGroup}
+                onUpdate:modelValue={(value: any) =>
+                  (this.selectedGroup = value)
+                }
+                options={this.groups}
+                label="name"
+                placeholder={this.t("general.agroup")}
+                class="w-100"
+              />
             </div>
-            <div>
-              <label class="mb-1 d-block">{this.t("general.frien")}</label>
-              <select
-                class="form-select"
-                style="max-width:300px"
-                value={this.selectedMember}
-                onChange={(e: Event) => {
-                  const target = e.target as HTMLSelectElement;
-                  // Karena kita ingin menampilkan nama yang terpilih, gunakan target.value
-                  this.selectedMember = target.value;
-                }}
-              >
-                <option value="">{this.t("general.frien")}</option>
-                {this.currentMembers.map((member) => (
-                  // Ubah value menjadi member.name agar konsisten
-                  <option key={member.value} value={member.name}>
-                    {member.name}
-                  </option>
-                ))}
-              </select>
+            <div class="flex-grow-1" style="min-width: 200px; max-width: 300px;">
+              <label class="mb-2 d-block font-weight-medium">
+                {this.t("general.friends")}
+              </label>
+              <vSelect
+                modelValue={this.selectedMember}
+                onUpdate:modelValue={(value: any) =>
+                  (this.selectedMember = value)
+                }
+                options={this.currentMembers}
+                label="name"
+                placeholder={this.t("general.frien")}
+                class="w-100"
+              />
             </div>
           </div>
         ) : (
-          <div class="mb-3">
-            <label class="mb-1 d-block">{this.t("general.users")}</label>
-            <select
-              class="form-select"
-              style="max-width:200px"
-              value={this.selectedUser}
-              onChange={(e: Event) => {
-                const target = e.target as HTMLSelectElement;
-                // Simpan nilai sebagai nama
-                this.selectedUser = target.value;
-              }}
-            >
-              <option value="">{this.t("general.select_user")}</option>
-              {this.staticUsers.map((user) => (
-                <option key={user.value} value={user.name}>
-                  {user.name}
-                </option>
-              ))}
-            </select>
+          <div class="mb-4" style="max-width: 300px;">
+            <label class="mb-2 d-block font-weight-medium">
+              {this.t("general.users")}
+            </label>
+            <vSelect
+              modelValue={this.selectedUser}
+              onUpdate:modelValue={(value: any) =>
+                (this.selectedUser = value)
+              }
+              options={this.staticUsers}
+              label="name"
+              placeholder={this.t("general.select_user")}
+              class="w-100"
+            />
           </div>
         )}
 
         {/* Card Favorit Surah */}
         <Card
-          class={["mb-4 text-white", { "bg-white": !this.$setting.isDarkMode }]}
+          class={[
+            "mb-4 text-white",
+            { "bg-white": !this.$setting.isDarkMode },
+          ]}
           headerClasses="d-flex justify-content-between bg-primary"
         >
           {{
@@ -247,7 +259,10 @@ export default defineComponent({
               </div>
             ),
             default: () => (
-              <div class="row custom-scrollbar" style="overflow-x: hidden; max-height: 200px">
+              <div
+                class="row custom-scrollbar"
+                style="overflow-x: hidden; max-height: 200px"
+              >
                 <div class="card-title my-auto d-flex flex-wrap gap-2 justify-center">
                   <router-link
                     to="/surah/36"
@@ -295,17 +310,32 @@ export default defineComponent({
         <div class="d-flex justify-content-between mb-3">
           <ul class="nav nav-pills mb-3">
             <li class="nav-item" onClick={() => (this.tab = "surah")}>
-              <div class={["nav-link cursor-pointer", { active: this.tab === "surah" }]}>
+              <div
+                class={[
+                  "nav-link cursor-pointer",
+                  { active: this.tab === "surah" },
+                ]}
+              >
                 {this.t("general.surah")}
               </div>
             </li>
             <li class="nav-item" onClick={() => (this.tab = "juz")}>
-              <div class={["nav-link cursor-pointer", { active: this.tab === "juz" }]}>
+              <div
+                class={[
+                  "nav-link cursor-pointer",
+                  { active: this.tab === "juz" },
+                ]}
+              >
                 {this.t("general.juz")}
               </div>
             </li>
             <li class="nav-item" onClick={() => (this.tab = "page")}>
-              <div class={["nav-link cursor-pointer", { active: this.tab === "page" }]}>
+              <div
+                class={[
+                  "nav-link cursor-pointer",
+                  { active: this.tab === "page" },
+                ]}
+              >
                 {this.t("general.halaman")}
               </div>
             </li>
@@ -320,7 +350,9 @@ export default defineComponent({
                     this.sort = this.sort === "desc" ? "asc" : "desc";
                   }}
                 >
-                  <span class="text-uppercase">{this.t(`sort.${this.sort}`)}</span>
+                  <span class="text-uppercase">
+                    {this.t(`sort.${this.sort}`)}
+                  </span>
                   <font-awesome-icon
                     icon={this.sort === "desc" ? "caret-down" : "caret-up"}
                     class="ms-1"
@@ -363,7 +395,11 @@ export default defineComponent({
                   }
                 }}
               />
-              <button class="btn btn-primary" disabled={!this.isInputFilled} onClick={this.navigateToSurah}>
+              <button
+                class="btn btn-primary"
+                disabled={!this.isInputFilled}
+                onClick={this.navigateToSurah}
+              >
                 {this.t("general.gopage")}
               </button>
             </div>

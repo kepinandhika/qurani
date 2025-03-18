@@ -1,0 +1,30 @@
+.v-select {
+    width: 100% !important;
+    max-width: 300px;
+    min-width: 200px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 8px;
+    background-color: #fff;
+    font-size: 14px;
+  }
+  
+  .v-select .vs__dropdown-toggle {
+    border-radius: 8px;
+    min-height: 40px;
+    padding: 5px 10px;
+  }
+  
+  .v-select .vs__search {
+    font-size: 14px;
+  }
+  
+  .v-select .vs__selected {
+    font-weight: 500;
+  }
+  
+  .v-select .vs__dropdown-menu {
+    border-radius: 8px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
