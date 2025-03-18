@@ -26,7 +26,6 @@ export default defineComponent({
     const tab = ref<Tab>("surah");
     const sort = ref<Sort>("asc");
     const halamanInput = ref<string>("1");
-
     const isInputFilled = computed(() => halamanInput.value.trim() !== "");
 
     const bookmarks = computed<Bookmarks[]>(() => {
@@ -75,50 +74,58 @@ export default defineComponent({
     }
 
     // ===== Data untuk tab ekstra: Grup & Pengguna =====
-    // Data statis untuk dua grup dan anggotanya
     const groups = ref([
       {
         id: "a",
         name: "Ubig 2025",
         members: [
-          { value: 7678, name: "Fatkul Amri " },
-          { value: 9809, name: "Asrori " },
-          { value: 9890, name: "Masum " },
-          { value: 6236, name: "Dimas " },
-          { value: 2354, name: "Richo " },
+          { value: 7678, name: "Fatkul Amri" },
+          { value: 9809, name: "Asrori" },
+          { value: 9890, name: "Masum" },
+          { value: 6236, name: "Dimas" },
+          { value: 2354, name: "Richo" },
         ],
       },
       {
         id: "b",
         name: "Qurani 2025",
         members: [
-          { value: 1221, name: "Galuh  " },
-          { value: 2827, name: "Kevin  " },
-          { value: 8723, name: "Dewa  " },
-          { value: 9012, name: "Niko  " },
-          { value: 8790, name: "Alvin  " },
+          { value: 1221, name: "Galuh" },
+          { value: 2827, name: "Kevin" },
+          { value: 8723, name: "Dewa" },
+          { value: 9012, name: "Niko" },
+          { value: 8790, name: "Alvin" },
         ],
       },
     ]);
-    // Nilai awal selectedGroup diubah menjadi string kosong untuk menampilkan default option
     const selectedGroup = ref("");
-    // Daftar anggota (teman) berdasarkan grup yang dipilih
     const currentMembers = computed(() => {
       const group = groups.value.find((g) => g.id === selectedGroup.value);
       return group ? group.members : [];
     });
 
-    // Data statis untuk 5 pengguna
+    // Untuk select anggota, kita simpan nilainya sebagai nama (agar konsisten dengan value option)
+    const selectedMember = ref("");
+    // Data statis untuk 5 pengguna; simpan juga nilainya sebagai nama
     const staticUsers = ref([
-      { value: 4538, name: "Alfian " },
-      { value: 7689, name: "Lang  " },
-      { value: 7109, name: "Naufal  " },
-      { value: 8145, name: "Fauzan " },
-      { value: 9021, name: "Tito " },
+      { value: 4538, name: "Alfian" },
+      { value: 7689, name: "Lang" },
+      { value: 7109, name: "Naufal" },
+      { value: 8145, name: "Fauzan" },
+      { value: 9021, name: "Tito" },
     ]);
+    const selectedUser = ref("");
 
     // Tab ekstra untuk mengatur tampilan Grup dan Pengguna
     const extraTab = ref<"grup" | "pengguna">("grup");
+
+    // Computed property untuk mendapatkan nama peserta sesuai dengan tab aktif
+    const selectedParticipant = computed(() => {
+      return extraTab.value === "grup" ? selectedMember.value : selectedUser.value;
+    });
+    watch(selectedParticipant, (newVal) => {
+      localStorage.setItem("participantName", newVal);
+    });
 
     return {
       t,
@@ -128,83 +135,103 @@ export default defineComponent({
       halamanInput,
       isInputFilled,
       navigateToSurah,
-      // Data untuk tab ekstra
       extraTab,
       groups,
       selectedGroup,
       currentMembers,
+      selectedMember,
       staticUsers,
+      selectedUser,
+      selectedParticipant,
     };
   },
   render() {
     return (
       <MainLayout>
- {/* Navigation Tab Ekstra untuk Grup dan Pengguna (diletakkan di atas Card Favorit Surah) */}
-<div class="d-flex justify-content-start mb-3">
-  <ul class="nav nav-pills">
-    <li class="nav-item" onClick={() => (this.extraTab = "grup")}>
-      <div class={["nav-link cursor-pointer", { active: this.extraTab === "grup" }]}>
-        {this.t("general.group")}
-      </div>
-    </li>
-    <li class="nav-item" onClick={() => (this.extraTab = "pengguna")}>
-      <div class={["nav-link cursor-pointer", { active: this.extraTab === "pengguna" }]}>
-        {this.t("general.users")}
-      </div>
-    </li>
-  </ul>
-</div>
+        {/* Navigation Tab Ekstra untuk Grup dan Pengguna */}
+        <div class="d-flex justify-content-start mb-3">
+          <ul class="nav nav-pills">
+            <li class="nav-item" onClick={() => (this.extraTab = "grup")}>
+              <div class={["nav-link cursor-pointer", { active: this.extraTab === "grup" }]}>
+                {this.t("general.group")}
+              </div>
+            </li>
+            <li class="nav-item" onClick={() => (this.extraTab = "pengguna")}>
+              <div class={["nav-link cursor-pointer", { active: this.extraTab === "pengguna" }]}>
+                {this.t("general.users")}
+              </div>
+            </li>
+          </ul>
+        </div>
 
-{/* Konten berdasarkan Extra Tab */}
-{this.extraTab === "grup" ? (
-  // Jika tab ekstra "grup", tampilkan select untuk Grup dan Anggota (Friends)
-  <div class="d-flex align-items-end gap-2 mb-3">
-    <div>
-      <label class="mb-1 d-block">{this.t("general.group")}</label>
-      <select
-        class="form-select"
-        style="max-width:300px"
-        value={this.selectedGroup}
-        onChange={(e: Event) => {
-          const sel = e.target as HTMLSelectElement;
-          this.selectedGroup = sel.value;
-        }}
-      >
-        {/* Opsi default */}
-        <option value="">{this.t("general.agroup")}</option>
-        {this.groups.map((group) => (
-          <option key={group.id} value={group.id}>
-            {group.name}
-          </option>
-        ))}
-      </select>
-    </div>
-    <div>
-      <label class="mb-1 d-block">{this.t("general.friends")}</label>
-      <select class="form-select" style="max-width:300px">
-        <option value="">{this.t("general.frien")}</option>
-        {this.currentMembers.map((member) => (
-          <option key={member.value} value={member.value}>
-            {member.name}
-          </option>
-        ))}
-      </select>
-    </div>
-  </div>
-) : (
-  // Jika tab ekstra "pengguna", tampilkan select untuk Pengguna
-  <div class="mb-3">
-    <label class="mb-1 d-block">{this.t("general.users")}</label>
-    <select class="form-select" style="max-width:200px">
-      <option value="">{this.t("general.select_user")}</option>
-      {this.staticUsers.map((user) => (
-        <option key={user.value} value={user.value}>
-          {user.name}
-        </option>
-      ))}
-    </select>
-  </div>
-)}
+        {/* Konten berdasarkan Extra Tab */}
+        {this.extraTab === "grup" ? (
+          <div class="d-flex align-items-end gap-2 mb-3">
+            <div>
+              <label class="mb-1 d-block">{this.t("general.group")}</label>
+              <select
+                class="form-select"
+                style="max-width:300px"
+                value={this.selectedGroup}
+                onChange={(e: Event) => {
+                  const target = e.target as HTMLSelectElement;
+                  this.selectedGroup = target.value;
+                  // Reset pilihan anggota saat grup berubah
+                  this.selectedMember = "";
+                }}
+              >
+                <option value="">{this.t("general.agroup")}</option>
+                {this.groups.map((group) => (
+                  <option key={group.id} value={group.id}>
+                    {group.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label class="mb-1 d-block">{this.t("general.frien")}</label>
+              <select
+                class="form-select"
+                style="max-width:300px"
+                value={this.selectedMember}
+                onChange={(e: Event) => {
+                  const target = e.target as HTMLSelectElement;
+                  // Karena kita ingin menampilkan nama yang terpilih, gunakan target.value
+                  this.selectedMember = target.value;
+                }}
+              >
+                <option value="">{this.t("general.frien")}</option>
+                {this.currentMembers.map((member) => (
+                  // Ubah value menjadi member.name agar konsisten
+                  <option key={member.value} value={member.name}>
+                    {member.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        ) : (
+          <div class="mb-3">
+            <label class="mb-1 d-block">{this.t("general.users")}</label>
+            <select
+              class="form-select"
+              style="max-width:200px"
+              value={this.selectedUser}
+              onChange={(e: Event) => {
+                const target = e.target as HTMLSelectElement;
+                // Simpan nilai sebagai nama
+                this.selectedUser = target.value;
+              }}
+            >
+              <option value="">{this.t("general.select_user")}</option>
+              {this.staticUsers.map((user) => (
+                <option key={user.value} value={user.name}>
+                  {user.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         {/* Card Favorit Surah */}
         <Card
@@ -268,23 +295,22 @@ export default defineComponent({
         <div class="d-flex justify-content-between mb-3">
           <ul class="nav nav-pills mb-3">
             <li class="nav-item" onClick={() => (this.tab = "surah")}>
-              <div class={["nav-link cursor-pointer", { active: this.tab == "surah" }]}>
+              <div class={["nav-link cursor-pointer", { active: this.tab === "surah" }]}>
                 {this.t("general.surah")}
               </div>
             </li>
             <li class="nav-item" onClick={() => (this.tab = "juz")}>
-              <div class={["nav-link cursor-pointer", { active: this.tab == "juz" }]}>
+              <div class={["nav-link cursor-pointer", { active: this.tab === "juz" }]}>
                 {this.t("general.juz")}
               </div>
             </li>
             <li class="nav-item" onClick={() => (this.tab = "page")}>
-              <div class={["nav-link cursor-pointer", { active: this.tab == "page" }]}>
+              <div class={["nav-link cursor-pointer", { active: this.tab === "page" }]}>
                 {this.t("general.halaman")}
               </div>
             </li>
           </ul>
-          {this.tab !== "page" &&  this.tab !== "juz" &&
-(
+          {this.tab !== "page" && this.tab !== "juz" && (
             <div class="my-auto">
               <small>
                 <span class="me-2">{this.t("sort.by")}:</span>
@@ -346,7 +372,9 @@ export default defineComponent({
           h(Surah, { sort: this.sort })
         ) : this.tab === "juz" ? (
           h(Juz, { sort: this.sort })
-        ) : h("div", {}, "")}
+        ) : (
+          h("div", {}, "")
+        )}
       </MainLayout>
     );
   },

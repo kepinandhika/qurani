@@ -68,5 +68,16 @@
   "transliteration": "Transliterasi",
   "source": "Sumber",
   "select_friend": "Tambah Anggota",
-  "surah-info-is-not-available-here": "Info surah tidak tersedia disini."
+  "surah-info-is-not-available-here": "Info surah tidak tersedia disini.",
+  "back":"Kembali",
+  "hasilrekap":"Hasil Belajar",
+  "peserta":"Peserta :",
+  "kesalahanayat":"Kesalahan ayat :",
+  "kesalahankata":"Kesalahan kata :",
+  "catatan":"Catatan:",
+  "PKesimpulan":"Pilih Kesimpulan",
+  "kesimpulan":"Kesimpulan :",
+  "penyimak":"Penyimak :",
+  "kirim":"Kirim"
+
 }

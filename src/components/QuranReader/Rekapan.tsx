@@ -16,14 +16,28 @@ export default defineComponent({
     const recapData = reactive({
       namaPenyimak: "",
       kesimpulan: "",
-      catatan: ""
+      catatan: "",
+      namapeserta: ""
     });
 
+    // Data default untuk penyimak
+    const defaultPenyimak = { value: 2378, name: "Fatkul Amri" };
+
     onMounted(() => {
+      // Muat data kesalahan jika ada
       const data = localStorage.getItem("markedErrors");
       if (data) {
         markedErrors.value = JSON.parse(data);
         console.log("Data kesalahan dimuat:", markedErrors.value);
+      }
+      // Set nama penyimak default jika belum ada isian
+      if (!recapData.namaPenyimak) {
+        recapData.namaPenyimak = defaultPenyimak.name;
+      }
+      // Ambil nama peserta yang sudah tersimpan (misal dari komponen Index)
+      const participantName = localStorage.getItem("participantName");
+      if (participantName) {
+        recapData.namapeserta = participantName;
       }
     });
 
@@ -50,7 +64,6 @@ export default defineComponent({
     // Mapping warna kesalahan berdasarkan jenisnya
     function getErrorColor(error: string): string {
       const colorMap: Record<string, string> = {
-        // Untuk kesalahan kata
         "Gharib": "#CCCCCC",
         "Ghunnah": "#99CCFF",
         "Harokat Tertukar": "#DFF18F",
@@ -65,13 +78,12 @@ export default defineComponent({
         "Waqof atau Washol (berhenti atau lanjut)": "#A1D4CF",
         "Waqof dan Ibtida (berhenti dan memulai)": "#90CBAA",
         "Lainnya": "#CC99CC",
-        // Untuk kesalahan ayat
         "Ayat Lupa (tidak dibaca)": "#FA7656",
         "Ayat Waqof atau Washol (berhenti atau lanjut)": "#FE7D8F",
         "Ayat Waqof dan Ibtida (berhenti dan memulai)": "#90CBAA",
         "LainNya": "#CC99CC"
       };
-      return colorMap[error] || "#6c757d"; // default gray jika tidak ditemukan
+      return colorMap[error] || "#6c757d";
     }
 
     function submitRecap() {
@@ -104,34 +116,46 @@ export default defineComponent({
     return (
       <div class="container my-4">
         <button class="btn btn-link mb-3" style="text-decoration:none;" onClick={this.goBack}>
-          <i class="bi bi-arrow-left"></i> Kembali
+          <i class="bi bi-arrow-left"></i> {this.$t("general.back")}
         </button>
 
-        <h2 class="mb-4 text-center">Rekapan Kesalahan</h2>
+        <h2 class="mb-4 text-center">{this.$t("general.hasilrekap")}</h2>
         <div class="card p-4 shadow-sm">
+          {/* Field Nama Peserta (tidak dapat diubah) */}
           <div class="mb-3">
-            <label class="form-label">Nama Penyimak:</label>
-            <input 
-              type="text" 
+            <label class="form-label">{this.$t("general.peserta")}</label>
+            <input
+              type="text"
+              class="form-control"
+              v-model={this.recapData.namapeserta}
+              placeholder="Nama peserta"
+              disabled
+            />
+          </div>
+          {/* Field Nama Penyimak (tidak dapat diubah) */}
+          <div class="mb-3">
+            <label class="form-label">{this.$t("general.penyimak")}</label>
+            <input
+              type="text"
               class="form-control"
               v-model={this.recapData.namaPenyimak}
               placeholder="Masukkan nama penyimak"
+              disabled
             />
           </div>
-
           <div class="mb-3">
-            <h4>Rekapan Kesalahan Ayat:</h4>
+            <h5>{this.$t("general.kesalahanayat")}</h5>
             {this.verseErrors.length === 0 ? (
               <p class="text-muted">Tidak ada kesalahan ayat.</p>
             ) : (
               <ul class="list-group">
                 {this.verseErrors.map((err, index) => (
                   <li key={index} class="list-group-item">
-                    <strong>Surah {err.surah}, Ayat {err.ayat}</strong>  
+                    <strong>Surah {err.surah}, Ayat {err.ayat}</strong>
                     <br />
                     Kesalahan:{" "}
-                    <span 
-                      class="badge" 
+                    <span
+                      class="badge"
                       style={{
                         backgroundColor: this.getErrorColor(err.jenisKesalahan),
                         borderWidth: "2px",
@@ -147,37 +171,37 @@ export default defineComponent({
               </ul>
             )}
           </div>
-          
           <div class="mb-3">
-            <h4>Rekapan Kata:</h4>
-            <ul class="list-group">
-              {Object.entries(this.wordErrorCounts).map(([error, count]) => (
-                <li class="list-group-item d-flex justify-content-between">
-                  <span>{error}</span> 
-                  <span 
-                    class="badge" 
-                    style={{
-                      backgroundColor: this.getErrorColor(error),
-                      borderWidth: "2px",
-                      fontWeight: "500",
-                      textAlign: "left",
-                      color: "#000000"
-                    }}
-                  >
-                    {count}
-                  </span>
-                </li>
-              ))}
-            </ul>
+            <h5>{this.$t("general.kesalahankata")}</h5>
+            {Object.entries(this.wordErrorCounts).length > 0 ? (
+              <ul class="list-group">
+                {Object.entries(this.wordErrorCounts).map(([error, count]) => (
+                  <li class="list-group-item d-flex justify-content-start align-items-center">
+                    <span
+                      class="badge me-2"
+                      style={{
+                        backgroundColor: this.getErrorColor(error),
+                        borderWidth: "2px",
+                        fontWeight: "500",
+                        textAlign: "center",
+                        color: "#000000",
+                        minWidth: "10px"
+                      }}
+                    >
+                      {count}
+                    </span>
+                    <span>{error}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p class="text-muted">Tidak ada kesalahan kata</p>
+            )}
           </div>
-
           <div class="mb-3">
-            <label class="form-label">Kesimpulan:</label>
-            <select 
-              class="form-select"
-              v-model={this.recapData.kesimpulan}
-            >
-              <option value="">Pilih kesimpulan</option>
+            <label class="form-label">{this.$t("general.kesimpulan")}</label>
+            <select class="form-select" v-model={this.recapData.kesimpulan}>
+              <option value="">{this.$t("general.PKesimpulan")}</option>
               <option value="Lancar">Lancar</option>
               <option value="Tidak Lancar">Tidak Lancar</option>
               <option value="Lulus">Lulus</option>
@@ -186,18 +210,18 @@ export default defineComponent({
               <option value="Dhoif">Dhoif</option>
             </select>
           </div>
-          
           <div class="mb-3">
-            <label class="form-label">Catatan:</label>
-            <textarea 
+            <label class="form-label">{this.$t("general.catatan")}</label>
+            <textarea
               class="form-control"
               placeholder="Tambahkan catatan..."
               v-model={this.recapData.catatan}
             ></textarea>
           </div>
-          
           <div class="d-flex justify-content-end">
-            <button class="btn btn-primary" onClick={this.submitRecap}>Submit Rekapan</button>
+            <button class="btn btn-primary" onClick={this.submitRecap}>
+              {this.$t("general.kirim")}
+            </button>
           </div>
         </div>
       </div>

@@ -3231,6 +3231,11 @@ vue-i18n@^9.3.0-beta.19:
     "@intlify/vue-devtools" "9.3.0-beta.19"
     "@vue/devtools-api" "^6.5.0"
 
+vue-multiselect-next@^2.1.7:
+  version "2.1.7"
+  resolved "https://registry.npmjs.org/vue-multiselect-next/-/vue-multiselect-next-2.1.7.tgz"
+  integrity sha512-MmPNnUnEwFZsgCZs9kpzSQu8OqyKIL25Gu3gtyvRWgcLww7Y+itnA0xOn0iLvb0WlZ3r/WAZLcmnslFoqhGUrQ==
+
 vue-router@^4.1.6:
   version "4.2.2"
   resolved "https://registry.npmjs.org/vue-router/-/vue-router-4.2.2.tgz"

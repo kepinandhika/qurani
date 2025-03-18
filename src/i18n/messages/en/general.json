@@ -68,5 +68,16 @@
     "new_group": "Enter a name of your group",
     "friends": "Member",
     "frien": "Choose Member",
-    "surah-info-is-not-available-here": "Surah info is not available here."
+    "surah-info-is-not-available-here": "Surah info is not available here.",
+    "back":"Back",
+    "hasilrekap":"Resource",
+    "peserta":"Participants :",
+    "penyimak":"Listener :",
+    "kesalahanayat":"Wrong Ayat:",
+    "kesalahankata":"Wrong word :",
+    "PKesimpulan":"Chooose Conclusion",
+    "catatan":"Note",
+    "kesimpulan":"Conclusion :",
+    "kirim":"Submit"
+
 }
