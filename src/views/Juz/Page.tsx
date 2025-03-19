@@ -106,11 +106,24 @@ export default defineComponent({
             return Object.keys(page).map(number => Number(number)).sort((a, b) => a - b);
         });
 
+        // function nextChapter() {
+        //     if (meta.value.hasNextChapter) {
+        //         router.push({ name: "juz", params: { id: props.chapter[props.chapter.length - 1].id + 1 } });
+        //     }
+        // }
         function nextChapter() {
             if (meta.value.hasNextChapter) {
-                router.push({ name: "juz", params: { id: props.chapter[props.chapter.length - 1].id + 1 } });
+                router.push({ 
+                    name: "juz", 
+                    params: { id: props.chapter[props.chapter.length - 1].id + 1 } 
+                }).then(() => {
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 500); 
+                });
             }
         }
+
 
         function prevChapter() {
             if (meta.value.hasPrevChapter) {
