@@ -87,28 +87,28 @@ export default defineComponent({
     const groups = ref([
       {
         id: "a",
-        name: "Ubig 2025",
+        name: `Magang PT Universal Big Data (UBIG) - 2025`,
         members: [
-          { value: 7678, name: "Fatkul Amri" },
-          { value: 9809, name: "Asrori" },
-          { value: 9890, name: "Masum" },
-          { value: 6236, name: "Dimas" },
-          { value: 2354, name: "Richo" },
+          { value: 7678, name: "Ahmada royhan najib" },
+          { value: 9809, name: "Rasya mulaina hujin" },
+          { value: 9890, name: "Ahmad masum" },
+          { value: 6236, name: "Dimas vico satria nugraha" },
+          { value: 2354, name: "Della sabrina indah putri" },
         ],
       },
       {
         id: "b",
         name: "Qurani 2025",
         members: [
-          { value: 1221, name: "Galuh" },
-          { value: 2827, name: "Kevin" },
-          { value: 8723, name: "Dewa" },
-          { value: 9012, name: "Niko" },
-          { value: 8790, name: "Alvin" },
+          { value: 1221, name: "Galuh saputra kelak" },
+          { value: 2827, name: "Kevin andhika pratama" },
+          { value: 8723, name: "Dewa yuna yunino" },
+          { value: 9012, name: "Niko sistiyan prayogi" },
+          { value: 8790, name: "Alvin muh jaidi nur" },
         ],
       },
     ]);
-    // selectedGroup disimpan sebagai objek
+    // Simpan selectedGroup sebagai objek
     const selectedGroup = ref<any>(null);
     // selectedMember untuk memilih anggota dari grup
     const selectedMember = ref<any>(null);
@@ -121,11 +121,11 @@ export default defineComponent({
 
     // Data statis untuk 5 pengguna
     const staticUsers = ref([
-      { value: 4538, name: "Alfian" },
-      { value: 7689, name: "Lang" },
-      { value: 7109, name: "Naufal" },
+      { value: 4538, name: "Alfian prada prasetyo" },
+      { value: 7689, name: "Lang natanegara maju" },
+      { value: 7109, name: "Naufal prayoga " },
       { value: 8145, name: "Fauzan" },
-      { value: 9021, name: "Tito" },
+      { value: 9021, name: "Tito Bryan ardiansyah" },
     ]);
     const selectedUser = ref<any>(null);
 
@@ -199,13 +199,12 @@ export default defineComponent({
               </label>
               <vSelect
                 modelValue={this.selectedGroup}
-                onUpdate:modelValue={(value: any) =>
-                  (this.selectedGroup = value)
-                }
+                onUpdate:modelValue={(value: any) => (this.selectedGroup = value)}
                 options={this.groups}
                 label="name"
                 placeholder={this.t("general.agroup")}
                 class="w-100"
+                clearable={true}
               />
             </div>
             <div class="flex-grow-1" style="min-width: 200px; max-width: 300px;">
@@ -214,13 +213,12 @@ export default defineComponent({
               </label>
               <vSelect
                 modelValue={this.selectedMember}
-                onUpdate:modelValue={(value: any) =>
-                  (this.selectedMember = value)
-                }
+                onUpdate:modelValue={(value: any) => (this.selectedMember = value)}
                 options={this.currentMembers}
                 label="name"
                 placeholder={this.t("general.frien")}
                 class="w-100"
+                clearable={true}
               />
             </div>
           </div>
@@ -231,13 +229,12 @@ export default defineComponent({
             </label>
             <vSelect
               modelValue={this.selectedUser}
-              onUpdate:modelValue={(value: any) =>
-                (this.selectedUser = value)
-              }
+              onUpdate:modelValue={(value: any) => (this.selectedUser = value)}
               options={this.staticUsers}
               label="name"
               placeholder={this.t("general.select_user")}
               class="w-100"
+              clearable={false}
             />
           </div>
         )}

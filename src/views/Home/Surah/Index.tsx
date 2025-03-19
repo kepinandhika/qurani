@@ -32,8 +32,12 @@ export default defineComponent({
                 {this.data.map(chapter => (
                     <div key={chapter.id} class="col-12 col-md-6 col-lg-4 mb-2">
                         <div
-                            class={[styles.card_chapter, styles.border_radius_1rem]}
-                            onClick={() => this.$router.push({name: "chapter", params: {id: chapter.id}})}
+                             class={[styles.card_chapter, styles.border_radius_1rem]}
+                             onClick={() => {
+                               // Simpan nama surah yang dipilih ke localStorage, misalnya 'Al-Fatihah'
+                               localStorage.setItem("selectedSurah", chapter.name_simple);
+                               this.$router.push({ name: "chapter", params: { id: chapter.id } });
+                             }}
                         >
                             <div class="d-flex justify-content-between h-100">
                                 <div class="d-flex align-items-center">
