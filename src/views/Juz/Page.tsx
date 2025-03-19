@@ -108,13 +108,13 @@ export default defineComponent({
 
         function nextChapter() {
             if (meta.value.hasNextChapter) {
-                router.push({ name: "chapter", params: { id: props.chapter[props.chapter.length - 1].id + 1 } });
+                router.push({ name: "juz", params: { id: props.chapter[props.chapter.length - 1].id + 1 } });
             }
         }
 
         function prevChapter() {
             if (meta.value.hasPrevChapter) {
-                router.push({ name: "chapter", params: { id: props.chapter[0].id - 1 } });
+                router.push({ name: "juz", params: { id: props.chapter[0].id - 1 } });
             }
         }
 
@@ -366,7 +366,7 @@ export default defineComponent({
                                             {this.meta.hasPrevChapter && (
                                                 <div class={`col-${this.meta.colNumber}`}>
                                                     <Button type="default" class="w-100 h-100" size="sm" onClick={this.prevChapter}>
-                                                        {this.$t("quran-reader.prev-surah")}
+                                                        {this.$t("quran-reader.prev-juz")}
                                                     </Button>
                                                 </div>
                                             )}
@@ -378,7 +378,7 @@ export default defineComponent({
                                             {this.meta.hasNextChapter && (
                                                 <div class={`col-${this.meta.colNumber}`}>
                                                     <Button type="default" class="w-100 h-100" size="sm" onClick={this.nextChapter}>
-                                                        {this.$t("quran-reader.next-surah")}
+                                                        {this.$t("quran-reader.next-juz")}
                                                     </Button>
                                                 </div>
                                             )}

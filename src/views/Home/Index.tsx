@@ -193,7 +193,7 @@ export default defineComponent({
         {/* Konten berdasarkan Extra Tab */}
         {this.extraTab === "grup" ? (
           <div class="d-flex flex-wrap align-items-end gap-3 mb-4">
-            <div class="flex-grow-1" style="min-width: 200px; max-width: 300px;">
+            <div class="flex-grow-1" style="min-width: 100px; max-width: 300px;">
               <label class="mb-2 d-block font-weight-medium">
                 {this.t("general.group")}
               </label>

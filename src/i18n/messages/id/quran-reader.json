@@ -7,5 +7,8 @@
     "next-surah": "Surah selanjutnya",
     "prev-surah": "Surah sebelumnya",
     "back-top": "Kembali ke atas",
-    "nav-header": "Hal {page}"
+    "nav-header": "Hal {page}",
+    "next-juz":"Juz selanjutnya",
+    "prev-juz": "Juz sebelumnya"
+
 }
