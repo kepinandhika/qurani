@@ -176,7 +176,7 @@ export default defineComponent({
           </div>
           <div class="d-flex gap-3 mb-3">
             <div class="flex-grow-1">
-              <label class="form-label">Surah yang dibaca:</label>
+              <label class="form-label">Surat yang dibaca:</label>
               <div class="card bg-white text-black p-2">
                 <span>{this.recapData.surahDibaca}</span>
               </div>
