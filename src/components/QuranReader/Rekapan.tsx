@@ -1,6 +1,9 @@
 import router from "@/routes";
 import { defineComponent, ref, computed, onMounted, reactive, watch } from "vue";
 import { useChapters } from "@/hooks/chapters";
+import vSelect from "vue-select";
+import "vue-select/dist/vue-select.css";
+import toast from "@/lib/toast";
 
 interface MarkedError {
   word: any;
@@ -12,6 +15,7 @@ interface MarkedError {
 
 export default defineComponent({
   name: "Rekapan",
+  components: { vSelect },
   setup() {
     const chapters = useChapters();
     const markedErrors = ref<MarkedError[]>([]);
@@ -29,6 +33,10 @@ export default defineComponent({
     const selectedStartVerse = ref<number>(1);
     const selectedEndVerse = ref<number>(1);
 
+    // Properti untuk memilih surah awal dan akhir dari 114 surah
+    const selectedStartSurah = ref<string>("");
+    const selectedEndSurah = ref<string>("");
+
     onMounted(() => {
       const data = localStorage.getItem("markedErrors");
       if (data) {
@@ -37,38 +45,58 @@ export default defineComponent({
       if (!recapData.namaPenyimak) {
         recapData.namaPenyimak = defaultPenyimak.name;
       }
-      const participantName = localStorage.getItem("participantName");
-      if (participantName) {
-        recapData.namapeserta = participantName;
-      }
-      // Ambil nama surah dari localStorage jika tersedia (misalnya disimpan dari index.tsx)
-      const selectedSurah = localStorage.getItem("selectedSurah");
-      if (selectedSurah) {
-        recapData.surahDibaca = selectedSurah;
+      // Ambil nama peserta dari localStorage
+      const participantName = localStorage.getItem("participantName") || "";
+      // Jika participantName kosong, maka field peserta juga kosong
+      recapData.namapeserta = participantName;
+      
+      const selectedSurahLS = localStorage.getItem("selectedSurah");
+      if (selectedSurahLS) {
+        recapData.surahDibaca = selectedSurahLS;
+        selectedStartSurah.value = selectedSurahLS;
+        selectedEndSurah.value = selectedSurahLS;
       } else if (markedErrors.value.length > 0) {
-        // Jika tidak ada, ambil dari data error pertama sebagai fallback
         recapData.surahDibaca = markedErrors.value[0].chapterName;
+        selectedStartSurah.value = markedErrors.value[0].chapterName;
+        selectedEndSurah.value = markedErrors.value[0].chapterName;
+      } else if (chapters.data.value.length > 0) {
+        selectedStartSurah.value = chapters.data.value[0].name_simple;
+        selectedEndSurah.value = chapters.data.value[0].name_simple;
       }
     });
 
-    // Cari data surah berdasarkan nama yang tersimpan di recapData.surahDibaca
-    const selectedChapter = computed(() => {
-      if (recapData.surahDibaca) {
-        return chapters.data.value.find((ch) => ch.name_simple === recapData.surahDibaca) || null;
-      }
-      return null;
+    const selectedStartChapter = computed(() => {
+      return chapters.data.value.find(
+        (ch) => ch.name_simple === selectedStartSurah.value
+      ) || null;
+    });
+    const selectedEndChapter = computed(() => {
+      return chapters.data.value.find(
+        (ch) => ch.name_simple === selectedEndSurah.value
+      ) || null;
     });
 
-    // Total ayat dari surah yang dipilih
-    const totalVerses = computed(() => {
-      return selectedChapter.value ? selectedChapter.value.verses_count : 0;
+    const totalStartVerses = computed(() => {
+      return selectedStartChapter.value ? selectedStartChapter.value.verses_count : 0;
+    });
+    const totalEndVerses = computed(() => {
+      return selectedEndChapter.value ? selectedEndChapter.value.verses_count : 0;
     });
 
-    // Jika totalVerses berubah dan sudah tersedia, set default:
-    // Ayat awal = 1 dan Ayat akhir = totalVerses (ayat terakhir)
-    watch(totalVerses, (newVal) => {
+    const startVerseOptions = computed(() => {
+      return Array.from({ length: totalStartVerses.value }, (_, i) => i + 1);
+    });
+    const endVerseOptions = computed(() => {
+      return Array.from({ length: totalEndVerses.value }, (_, i) => i + 1);
+    });
+
+    watch(totalStartVerses, (newVal) => {
       if (newVal > 0) {
         selectedStartVerse.value = 1;
+      }
+    }, { immediate: true });
+    watch(totalEndVerses, (newVal) => {
+      if (newVal > 0) {
         selectedEndVerse.value = newVal;
       }
     }, { immediate: true });
@@ -108,11 +136,10 @@ export default defineComponent({
         'Waqof atau Washol (berhenti atau lanjut)': '#A1D4CF',
         'Waqof dan Ibtida (berhenti dan memulai)': '#90CBAA',
         'Lainnya': '#CC99CC',
-
         'Ayat Lupa (tidak dibaca)': '#FA7656',
         'Ayat Waqof atau Washol (berhenti atau lanjut)': '#FE7D8F',
         'Ayat Waqof dan Ibtida (berhenti dan memulai)': '#90CBAA',
-        'LainNya': '#CC99CC',
+      
       };
       return colorMap[error] || "#6c757d";
     }
@@ -124,19 +151,38 @@ export default defineComponent({
         catatan: recapData.catatan,
         verseErrors: verseErrors.value,
         wordErrorCounts: wordErrorCounts.value,
-        // Sertakan informasi ayat yang dipilih
+        startSurah: selectedStartSurah.value,
         startVerse: selectedStartVerse.value,
+        endSurah: selectedEndSurah.value,
         endVerse: selectedEndVerse.value
       };
+
+      console.log("Recap Data:", recapPayload);
+
       localStorage.setItem("recapData", JSON.stringify(recapPayload));
-      submissionNotification.value = "Recap berhasil terkirim!";
+      toast.success("Hasil berhasil terkirim!");
+
+      // Delay 3 detik, lalu alihkan ke halaman rumah
+      setTimeout(() => {
+        router.push({ name: "home" });
+      }, 3000);
+
+      // Delay 5 detik sebelum menghapus dialog kesalahan (jika pengguna sudah meninggalkan halaman rekapan)
+      setTimeout(() => {
+        if (router.currentRoute.value.name !== "rekapan") {
+          localStorage.removeItem("markedErrors");
+          markedErrors.value = [];
+        }
+      }, 0);
     }
 
     function goBack() {
-      localStorage.removeItem("markedErrors");
-      markedErrors.value = [];
       router.go(-1);
     }
+
+    const surahOptions = computed(() => {
+      return chapters.data.value.map((ch: any) => ch.name_simple);
+    });
 
     return {
       recapData,
@@ -146,9 +192,16 @@ export default defineComponent({
       goBack,
       getErrorColor,
       submissionNotification,
+      selectedStartSurah,
       selectedStartVerse,
+      totalStartVerses,
+      startVerseOptions,
+      selectedEndSurah,
       selectedEndVerse,
-      totalVerses
+      totalEndVerses,
+      endVerseOptions,
+      chapters,
+      surahOptions
     };
   },
   render() {
@@ -170,49 +223,60 @@ export default defineComponent({
             <label class="form-label">Nama Peserta</label>
             <input type="text" class="form-control" v-model={this.recapData.namapeserta} disabled />
           </div>
-          <div class="mb-3">
-            <label class="form-label">Nama Penyimak</label>
-            <input type="text" class="form-control" v-model={this.recapData.namaPenyimak} disabled />
-          </div>
+
+          {/* Awal Surat & Ayat dengan pencarian */}
           <div class="d-flex gap-3 mb-3">
             <div class="flex-grow-1">
               <label class="form-label">Awal Surat:</label>
-              <div class="card bg-white text-black p-2">
-                <span>{this.recapData.surahDibaca}</span>
-              </div>
+              <vSelect
+                modelValue={this.selectedStartSurah}
+                onUpdate:modelValue={(value: string) => (this.selectedStartSurah = value)}
+                options={this.surahOptions}
+                placeholder="Cari surah..."
+                clearable={false}
+              />
             </div>
             <div class="flex-grow-1">
-              <label class="form-label">Ayat:</label>
-              <select class="form-select" v-model={this.selectedStartVerse}>
-                {Array.from({ length: this.totalVerses }, (_, i) => (
-                  <option value={i + 1}>{i + 1}</option>
-                ))}
-              </select>
-            </div>
-            <div class="flex-grow-1">
-              <label class="form-label">Sampai:</label>
-              <select class="form-select" v-model={this.selectedEndVerse}>
-                {Array.from({ length: this.totalVerses }, (_, i) => {
-                  const verseNumber = i + 1;
-                  const label = verseNumber === this.totalVerses
-                    ? `${verseNumber}`
-                    : `${verseNumber}`;
-                  return <option value={verseNumber}>{label}</option>;
-                })}
-              </select>
+              <label class="form-label">Awal Ayat:</label>
+              <vSelect
+                modelValue={this.selectedStartVerse}
+                onUpdate:modelValue={(value: number) => (this.selectedStartVerse = value)}
+                options={this.startVerseOptions}
+                placeholder="Cari ayat..."
+                clearable={false}
+              />
             </div>
           </div>
+
+          {/* Akhir Surat & Ayat dengan pencarian */}
+          <div class="d-flex gap-3 mb-3">
+            <div class="flex-grow-1">
+              <label class="form-label">Akhir Surat:</label>
+              <vSelect
+                modelValue={this.selectedEndSurah}
+                onUpdate:modelValue={(value: string) => (this.selectedEndSurah = value)}
+                options={this.surahOptions}
+                placeholder="Cari surah..."
+                clearable={false}
+              />
+            </div>
+            <div class="flex-grow-1">
+              <label class="form-label">Akhir Ayat:</label>
+              <vSelect
+                modelValue={this.selectedEndVerse}
+                onUpdate:modelValue={(value: number) => (this.selectedEndVerse = value)}
+                options={this.endVerseOptions}
+                placeholder="Cari ayat..."
+                clearable={false}
+              />
+            </div>
+          </div>
+
           <div class="mb-3">
             <label class="form-label">Kesimpulan</label>
-            <select class="form-select" v-model={this.recapData.kesimpulan}>
+            <select class="form-select" style="max-width: 200px;" v-model={this.recapData.kesimpulan}>
               <option value="" style="color: grey;">Pilih Kesimpulan</option>
               <option value="Lancar">Lancar</option>
-//               <option value="Tidak Lancar">Tidak Lancar</option>
-//               <option value="Lulus">Lulus</option>
-//               <option value="Tidak Lulus">Tidak Lulus</option>
-//               <option value="Mumtaz">Mumtaz</option>
-//               <option value="Dhoif">Dhoif</option>
-
             </select>
           </div>
           <div class="mb-3">
@@ -232,7 +296,7 @@ export default defineComponent({
 
         {/* Kesalahan Ayat */}
         <div class="card p-4 shadow-sm mb-3">
-          <h5>Kesalahan Ayat</h5>
+          <h5>Kesalahan Ayat:</h5>
           {this.verseErrors.length === 0 ? (
             <p class="text-muted">Tidak ada kesalahan ayat.</p>
           ) : (
@@ -264,7 +328,7 @@ export default defineComponent({
 
         {/* Kesalahan Kata */}
         <div class="card p-4 shadow-sm">
-          <h5>Kesalahan Kata</h5>
+          <h5>Kesalahan Kata:</h5>
           {Object.entries(this.wordErrorCounts).length > 0 ? (
             <ul class="list-group">
               {Object.entries(this.wordErrorCounts).map(([error, count]) => (
@@ -285,5 +349,5 @@ export default defineComponent({
         </div>
       </div>
     );
-  }
+  },
 });

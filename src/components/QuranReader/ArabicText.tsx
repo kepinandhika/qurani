@@ -133,7 +133,7 @@ export default defineComponent({
       'Ayat Lupa (tidak dibaca)': '#FA7656',
       'Ayat Waqof atau Washol (berhenti atau lanjut)': '#FE7D8F',
       'Ayat Waqof dan Ibtida (berhenti dan memulai)': '#90CBAA',
-      'LainNya': '#CC99CC',
+     
     };
 
     // Fungsi untuk menentukan apakah kata yang berada pada posisi tertentu di-highlight
@@ -491,7 +491,7 @@ export default defineComponent({
                           <button class="w-100 mb-2 btn" onClick={() => this.markError(null, 'Ayat Lupa (tidak dibaca)', true)} style={{ backgroundColor: "#FA7656", borderWidth: "2px", fontWeight: "500", textAlign: "left", color: "#000000" }}>Ayat Lupa (tidak dibaca)</button>
                           <button class="w-100 mb-2 btn" onClick={() => this.markError(null, 'Ayat Waqof atau Washol (berhenti atau lanjut)', true)} style={{ backgroundColor: "#FE7D8F", borderWidth: "2px", fontWeight: "500", textAlign: "left", color: "#000000" }}>Ayat Waqof atau Washol (berhenti atau lanjut)</button>
                           <button class="w-100 mb-2 btn" onClick={() => this.markError(null, 'Ayat Waqof dan Ibtida (berhenti dan memulai)', true)} style={{ backgroundColor: "#90CBAA", borderWidth: "2px", fontWeight: "500", textAlign: "left", color: "#000000" }}>Ayat Waqof dan Ibtida (berhenti dan memulai)</button>
-                          <button class="w-100 mb-2 btn" onClick={() => this.markError(null, 'LainNya', true)} style={{ backgroundColor: "#CC99CC", borderWidth: "2px", fontWeight: "500", textAlign: "left", color: "#000000" }}>Lainnya</button>
+                          <button class="w-100 mb-2 btn" onClick={() => this.markError(null, 'Lainnya', true)} style={{ backgroundColor: "#CC99CC", borderWidth: "2px", fontWeight: "500", textAlign: "left", color: "#000000" }}>Lainnya</button>
                         </>
                       )
                     )}
