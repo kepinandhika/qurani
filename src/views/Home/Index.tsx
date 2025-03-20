@@ -11,8 +11,9 @@ import Juz from "./Juz/Index";
 import historyReplaceState from "@/helpers/history-replace-state";
 import collect from "collect.js";
 import toast from "@/lib/toast";
-import vSelect from "vue-select-next";
-import "./index.css";
+import vSelect from "vue-select";
+import "vue-select/dist/vue-select.css";
+
 
 type Tab = "surah" | "juz" | "page";
 
@@ -193,7 +194,7 @@ export default defineComponent({
         {/* Konten berdasarkan Extra Tab */}
         {this.extraTab === "grup" ? (
           <div class="d-flex flex-wrap align-items-end gap-3 mb-4">
-            <div class="flex-grow-1" style="min-width: 100px; max-width: 300px;">
+            <div class="flex-grow-1" style="min-width: 100px; max-width: 450px;">
               <label class="mb-2 d-block font-weight-medium">
                 {this.t("general.group")}
               </label>
