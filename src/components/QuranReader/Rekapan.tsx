@@ -146,6 +146,7 @@ export default defineComponent({
 
     function submitRecap() {
       const recapPayload = {
+        namapeserta: recapData.namapeserta,
         namaPenyimak: recapData.namaPenyimak,
         kesimpulan: recapData.kesimpulan,
         catatan: recapData.catatan,
@@ -173,7 +174,7 @@ export default defineComponent({
           localStorage.removeItem("markedErrors");
           markedErrors.value = [];
         }
-      }, 0);
+      }, 5000);
     }
 
     function goBack() {
