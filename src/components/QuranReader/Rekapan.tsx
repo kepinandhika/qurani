@@ -146,16 +146,16 @@ export default defineComponent({
 
     function submitRecap() {
       const recapPayload = {
-        namapeserta: recapData.namapeserta,
-        namaPenyimak: recapData.namaPenyimak,
-        kesimpulan: recapData.kesimpulan,
-        catatan: recapData.catatan,
-        verseErrors: verseErrors.value,
-        wordErrorCounts: wordErrorCounts.value,
-        startSurah: selectedStartSurah.value,
-        startVerse: selectedStartVerse.value,
-        endSurah: selectedEndSurah.value,
-        endVerse: selectedEndVerse.value
+        Peserta: recapData.namapeserta,
+        Penyimak: recapData.namaPenyimak,
+        Kesimpulan: recapData.kesimpulan,
+        Catatan: recapData.catatan,
+        SalahAyat: verseErrors.value,
+        SalahKata: wordErrorCounts.value,
+        AwalSurat: selectedStartSurah.value,
+        AwalAyat: selectedStartVerse.value,
+        AkhirSurat: selectedEndSurah.value,
+        AkhirKata: selectedEndVerse.value
       };
 
       console.log("Recap Data:", recapPayload);
@@ -163,6 +163,9 @@ export default defineComponent({
       localStorage.setItem("recapData", JSON.stringify(recapPayload));
       toast.success("Hasil berhasil terkirim!");
 
+        // Reset data anggota/peserta di localStorage
+    localStorage.removeItem("selectedMember");
+    // localStorage.removeItem("selectedUser");
       // Delay 3 detik, lalu alihkan ke halaman rumah
       setTimeout(() => {
         router.push({ name: "home" });
@@ -278,6 +281,11 @@ export default defineComponent({
             <select class="form-select" style="max-width: 200px;" v-model={this.recapData.kesimpulan}>
               <option value="" style="color: grey;">Pilih Kesimpulan</option>
               <option value="Lancar">Lancar</option>
+//               <option value="Tidak Lancar">Tidak Lancar</option>
+//               <option value="Lulus">Lulus</option>
+//               <option value="Tidak Lulus">Tidak Lulus</option>
+//               <option value="Mumtaz">Mumtaz</option>
+//               <option value="Dhoif">Dhoif</option>
             </select>
           </div>
           <div class="mb-3">

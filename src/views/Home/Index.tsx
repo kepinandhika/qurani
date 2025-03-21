@@ -15,6 +15,7 @@ import vSelect from "vue-select";
 import "vue-select/dist/vue-select.css";
 
 type Tab = "surah" | "juz" | "page";
+type ExtraTab = "grup" | "pengguna";
 
 export default defineComponent({
   name: "CompleteComponent",
@@ -84,6 +85,7 @@ export default defineComponent({
     }
 
     // ===== Data untuk tab ekstra: Grup & Pengguna =====
+    // Data untuk Grup & Anggota
     const groups = ref([
       {
         id: "a",
@@ -110,7 +112,6 @@ export default defineComponent({
           { value: 19, name: "Ryan - SMKN 8 Malang" },
         ],
       },
-
       {
         id: "b",
         name: "Qurani 2025",
@@ -124,25 +125,39 @@ export default defineComponent({
       },
     ]);
 
-    // Simpan selectedGroup sebagai objek
+    // Selected group & member (untuk Grup)
     const selectedGroup = ref<any>(null);
-    // selectedMember untuk memilih anggota dari grup
     const selectedMember = ref<any>(null);
-    // Reset anggota jika grup di-clear
     watch(selectedGroup, (newVal) => {
       if (!newVal) {
         selectedMember.value = null;
       }
-      // Simpan pilihan grup ke localStorage
       localStorage.setItem("selectedGroup", JSON.stringify(newVal));
     });
-
-    // Watch untuk menyimpan pilihan anggota ke localStorage
     watch(selectedMember, (newVal) => {
       localStorage.setItem("selectedMember", JSON.stringify(newVal));
+      if (newVal) {
+        localStorage.setItem("participantName", newVal.name);
+      }
     });
 
-    // Ambil pilihan grup dan anggota dari localStorage saat onMounted
+    // Data untuk Pengguna
+    const staticUsers = ref([
+      { value: 4538, name: "Alfian prada prasetyo" },
+      { value: 7689, name: "Lang natanegara maju" },
+      { value: 7109, name: "Naufal prayoga" },
+      { value: 8145, name: "Fauzan" },
+      { value: 9021, name: "Tito Bryan ardiansyah" },
+    ]);
+    const selectedUser = ref<any>(null);
+    watch(selectedUser, (newVal) => {
+      localStorage.setItem("selectedUser", JSON.stringify(newVal));
+      if (newVal) {
+        localStorage.setItem("participantName", newVal.name);
+      }
+    });
+
+    // Ambil pilihan dari localStorage saat onMounted
     onMounted(() => {
       const savedGroup = localStorage.getItem("selectedGroup");
       if (savedGroup) {
@@ -160,32 +175,6 @@ export default defineComponent({
           selectedMember.value = null;
         }
       }
-    });
-
-    // Daftar anggota berdasarkan grup yang dipilih
-    const currentMembers = computed(() => {
-      if (!selectedGroup.value) return [];
-      const group = groups.value.find((g) => g.id === selectedGroup.value.id);
-      return group ? group.members : [];
-    });
-
-    // Data statis untuk 5 pengguna
-    const staticUsers = ref([
-      { value: 4538, name: "Alfian prada prasetyo" },
-      { value: 7689, name: "Lang natanegara maju" },
-      { value: 7109, name: "Naufal prayoga " },
-      { value: 8145, name: "Fauzan" },
-      { value: 9021, name: "Tito Bryan ardiansyah" },
-    ]);
-    const selectedUser = ref<any>(null);
-
-    // Watch untuk menyimpan pilihan pengguna ke localStorage
-    watch(selectedUser, (newVal) => {
-      localStorage.setItem("selectedUser", JSON.stringify(newVal));
-    });
-
-    // Ambil pilihan pengguna dari localStorage saat onMounted
-    onMounted(() => {
       const savedUser = localStorage.getItem("selectedUser");
       if (savedUser) {
         try {
@@ -196,19 +185,34 @@ export default defineComponent({
       }
     });
 
-    // Tab ekstra untuk mengatur tampilan Grup dan Pengguna
-    const extraTab = ref<"grup" | "pengguna">("grup");
+    // Daftar anggota berdasarkan grup yang dipilih
+    const currentMembers = computed(() => {
+      if (!selectedGroup.value) return [];
+      const group = groups.value.find((g) => g.id === selectedGroup.value.id);
+      return group ? group.members : [];
+    });
 
-    // Computed property untuk mendapatkan nama peserta sesuai tab aktif
-    const selectedParticipant = computed(() => {
-      return extraTab.value === "grup"
-        ? selectedMember.value?.name || ""
-        : selectedUser.value?.name || "";
-    });
-    // Simpan nilai peserta ke localStorage agar bisa diambil di halaman rekapan
-    watch(selectedParticipant, (newVal) => {
-      localStorage.setItem("participantName", newVal);
-    });
+    // extraTab menentukan mode tampilan: "grup" atau "pengguna"
+    const extraTab = ref<ExtraTab>("grup");
+
+    // Method untuk validasi dan navigasi ke halaman surah favorite
+    function handleSurahFavorite(surahName: string, surahRoute: string) {
+      if (extraTab.value === "grup") {
+        const selMember = localStorage.getItem("selectedMember");
+        if (!selMember || selMember === "null") {
+          toast.error("Perlu memilih anggota terlebih dahulu");
+          return;
+        }
+      } else if (extraTab.value === "pengguna") {
+        const selUser = localStorage.getItem("selectedUser");
+        if (!selUser || selUser === "null") {
+          toast.error("Perlu memilih teman terlebih dahulu");
+          return;
+        }
+      }
+      localStorage.setItem("selectedSurah", surahName);
+      router.push(surahRoute);
+    }
 
     return {
       t,
@@ -225,173 +229,164 @@ export default defineComponent({
       currentMembers,
       staticUsers,
       selectedUser,
-      selectedParticipant,
+      router,
+      handleSurahFavorite,
     };
   },
   render() {
     return (
       <MainLayout>
+        {/* Navigation Tab Ekstra untuk Grup & Pengguna */}
         <Card class={"mb-3"}>
-        {/* Navigation Tab Ekstra untuk Grup dan Pengguna */}
-        <div class="d-flex justify-content-start mb-3">
-          <ul class="nav nav-pills">
-            <li class="nav-item" onClick={() => (this.extraTab = "grup")}>
-              <div
-                class={[
-                  "nav-link cursor-pointer",
-                  { active: this.extraTab === "grup" },
-                ]}
-              >
-                {this.t("general.group")}
-              </div>
-            </li>
-            <li class="nav-item" onClick={() => (this.extraTab = "pengguna")}>
-              <div
-                class={[
-                  "nav-link cursor-pointer",
-                  { active: this.extraTab === "pengguna" },
-                ]}
-              >
-                {this.t("general.users")}
-              </div>
-            </li>
-          </ul>
-        </div>
-
-        {/* Konten berdasarkan Extra Tab */}
-        
-        {this.extraTab === "grup" ? (
-          <div class="d-flex flex-wrap align-items-end gap-2 mb-3">
-            <div style={{ width: this.currentMembers.length > 0 ? "auto" : "450px", minWidth: "450px" }}>
-              <label class="mb-1 d-block">{this.t("general.group")}</label>
-              <vSelect
-                modelValue={this.selectedGroup}
-                onUpdate:modelValue={(value: any) => {
-                  this.selectedGroup = value;
-                  this.selectedMember = null; // Reset anggota jika grup di-clear
+          <div class="d-flex justify-content-start mb-3">
+            <ul class="nav nav-pills">
+              <li
+                class="nav-item"
+                onClick={() => {
+                  this.extraTab = "grup";
+                  // Saat mode grup, kita tidak peduli selectedUser
+                  this.selectedUser = null;
                 }}
-                options={this.groups}
-                label="name"
-                placeholder={this.t("general.agroup")}
-                style={{ width: this.currentMembers.length > 0 ? "auto" : "400px", minWidth: "400px" }}
-                class="w-100 w-md-auto"
-                clearable={true}
-              />
+              >
+                <div class={["nav-link cursor-pointer", { active: this.extraTab === "grup" }]}>
+                  {this.t("general.group")}
+                </div>
+              </li>
+              <li
+                class="nav-item"
+                onClick={() => {
+                  this.extraTab = "pengguna";
+                  // Saat mode pengguna, kita kosongkan selectedMember
+                  this.selectedMember = null;
+                }}
+              >
+                <div class={["nav-link cursor-pointer", { active: this.extraTab === "pengguna" }]}>
+                  {this.t("general.users")}
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          {/* Tampilkan pilihan sesuai tab aktif */}
+          {this.extraTab === "grup" ? (
+            <div class="d-flex flex-wrap align-items-end gap-2 mb-3">
+              <div style={{ width: this.currentMembers.length > 0 ? "auto" : "450px", minWidth: "450px" }}>
+                <label class="mb-1 d-block">{this.t("general.group")}</label>
+                <vSelect
+                  modelValue={this.selectedGroup}
+                  onUpdate:modelValue={(value: any) => {
+                    this.selectedGroup = value;
+                    this.selectedMember = null;
+                  }}
+                  options={this.groups}
+                  label="name"
+                  placeholder={this.t("general.agroup")}
+                  style={{ width: this.currentMembers.length > 0 ? "auto" : "400px", minWidth: "400px" }}
+                  class="w-100 w-md-auto"
+                  clearable={true}
+                />
+              </div>
+              <div style={{ width: this.currentMembers.length > 0 ? "auto" : "400px", minWidth: "450px" }}>
+                <label class="mb-1 d-block">{this.t("general.friends")}</label>
+                <vSelect
+                  modelValue={this.selectedMember}
+                  onUpdate:modelValue={(value: any) => (this.selectedMember = value)}
+                  options={this.currentMembers}
+                  label="name"
+                  placeholder={this.t("general.frien")}
+                  style={{ width: this.currentMembers.length > 0 ? "auto" : "400px", minWidth: "450px" }}
+                  class="w-100 w-md-auto"
+                />
+              </div>
             </div>
-            <div style={{ width: this.currentMembers.length > 0 ? "auto" : "400px", minWidth: "450px" }}>
-              <label class="mb-1 d-block">{this.t("general.friends")}</label>
+          ) : (
+            <div class="mb-3" style={{ maxWidth: "300px" }}>
+              <label class="mb-1 d-block">{this.t("general.users")}</label>
               <vSelect
-                modelValue={this.selectedMember}
-                onUpdate:modelValue={(value: any) => (this.selectedMember = value)}
-                options={this.currentMembers}
+                modelValue={this.selectedUser}
+                onUpdate:modelValue={(value: any) => (this.selectedUser = value)}
+                options={this.staticUsers}
                 label="name"
-                placeholder={this.t("general.frien")}
-                style={{ width: this.currentMembers.length > 0 ? "auto" : "400px", minWidth: "450px" }}
-                class="w-100 w-md-auto"
+                placeholder={this.t("general.select_user")}
+                style={{ width: "300px", minWidth: "300px" }}
               />
             </div>
-          </div>
-        ) : (
-          <div class="mb-3" style={{ maxWidth: "300px" }}>
-            <label class="mb-1 d-block">{this.t("general.users")}</label>
-            <vSelect
-              modelValue={this.selectedUser}
-              onUpdate:modelValue={(value: any) => (this.selectedUser = value)}
-              options={this.staticUsers}
-              label="name"
-              placeholder={this.t("general.select_user")}
-              style={{ width: this.currentMembers.length > 0 ? "auto" : "300px", minWidth: "300px" }}
-            />
-          </div>
-        )}
+          )}
         </Card>
 
         {/* Card Favorit Surah */}
         <Card
-  class={[
-    "mb-4 text-white",
-    { "bg-white": !this.$setting.isDarkMode },
-  ]}
-  headerClasses="d-flex justify-content-between bg-primary"
->
-  {{
-    header: () => (
-      <div class="card-title my-auto">
-        <div class="text-center font-bold text-lg">
-          {this.t("general.surahfavorite")}
-        </div>
-      </div>
-    ),
-    default: () => (
-      <div
-        class="row custom-scrollbar"
-        style="overflow-x: hidden; max-height: 200px"
-      >
-        <div class="card-title my-auto d-flex flex-wrap gap-2 justify-center">
-          <router-link
-            to="/surah/36"
-            class="px-2 py-1 bg-warning rounded text-dark text-sm sm:text-base"
-            onClick={() => localStorage.setItem("selectedSurah", "Ya-Sin")}
-          >
-            Yasin
-          </router-link>
-          <router-link
-            to="/surah/67"
-            class="px-2 py-1 bg-success rounded text-dark text-sm sm:text-base"
-            onClick={() => localStorage.setItem("selectedSurah", "Al-Mulk")}
-          >
-            Al-Mulk
-          </router-link>
-          <router-link
-            to="/surah/56"
-            class="px-2 py-1 bg-success rounded text-dark text-sm sm:text-base"
-            onClick={() => localStorage.setItem("selectedSurah", "Al-Waqi'ah")}
-          >
-            Al-Waqi'ah
-          </router-link>
-          <router-link
-            to="/surah/18"
-            class="px-2 py-1 bg-success rounded text-dark text-sm sm:text-base"
-            onClick={() => localStorage.setItem("selectedSurah", "Al-Kahf")}
-          >
-            Al-Kahf
-          </router-link>
-          <router-link
-            to="/surah/78"
-            class="px-2 py-1 bg-success rounded text-dark text-sm sm:text-base"
-            onClick={() => localStorage.setItem("selectedSurah", "An-Naba")}
-          >
-            An-Naba
-          </router-link>
-          <router-link
-            to="/surah/2"
-            class="px-2 py-1 bg-success rounded text-dark text-sm sm:text-base"
-            onClick={() => localStorage.setItem("selectedSurah", "Al-Baqarah")}
-          >
-            Al-Baqarah
-          </router-link>
-        </div>
-      </div>
-    ),
-  }}
-</Card>
-
+          class={["mb-4 text-white", { "bg-white": !this.$setting.isDarkMode }]}
+          headerClasses="d-flex justify-content-between bg-primary"
+        >
+          {{
+            header: () => (
+              <div class="card-title my-auto">
+                <div class="text-center font-bold text-lg">
+                  {this.t("general.surahfavorite")}
+                </div>
+              </div>
+            ),
+            default: () => (
+              <div class="row custom-scrollbar" style="overflow-x: hidden; max-height: 200px">
+                <div class="card-title my-auto d-flex flex-wrap gap-2 justify-center">
+                  <a
+                    class="px-2 py-1 bg-warning rounded text-dark text-sm sm:text-base cursor-pointer"
+                    onClick={() => this.handleSurahFavorite("Ya-Sin", "/surah/36")}
+                  >
+                    Yasin
+                  </a>
+                  <a
+                    class="px-2 py-1 bg-success rounded text-dark text-sm sm:text-base cursor-pointer"
+                    onClick={() => this.handleSurahFavorite("Al-Mulk", "/surah/67")}
+                  >
+                    Al-Mulk
+                  </a>
+                  <a
+                    class="px-2 py-1 bg-success rounded text-dark text-sm sm:text-base cursor-pointer"
+                    onClick={() => this.handleSurahFavorite("Al-Waqi'ah", "/surah/56")}
+                  >
+                    Al-Waqi'ah
+                  </a>
+                  <a
+                    class="px-2 py-1 bg-success rounded text-dark text-sm sm:text-base cursor-pointer"
+                    onClick={() => this.handleSurahFavorite("Al-Kahf", "/surah/18")}
+                  >
+                    Al-Kahf
+                  </a>
+                  <a
+                    class="px-2 py-1 bg-success rounded text-dark text-sm sm:text-base cursor-pointer"
+                    onClick={() => this.handleSurahFavorite("An-Naba", "/surah/78")}
+                  >
+                    An-Naba
+                  </a>
+                  <a
+                    class="px-2 py-1 bg-success rounded text-dark text-sm sm:text-base cursor-pointer"
+                    onClick={() => this.handleSurahFavorite("Al-Baqarah", "/surah/2")}
+                  >
+                    Al-Baqarah
+                  </a>
+                </div>
+              </div>
+            ),
+          }}
+        </Card>
 
         {/* Navigation Tab Utama untuk Surah, Juz, Halaman */}
         <div class="d-flex justify-content-between mb-3">
           <ul class="nav nav-pills mb-3">
             <li class="nav-item" onClick={() => (this.tab = "surah")}>
-              <div class={[ "nav-link cursor-pointer", { active: this.tab === "surah" } ]}>
+              <div class={["nav-link cursor-pointer", { active: this.tab === "surah" }]}>
                 {this.t("general.surah")}
               </div>
             </li>
             <li class="nav-item" onClick={() => (this.tab = "juz")}>
-              <div class={[ "nav-link cursor-pointer", { active: this.tab === "juz" } ]}>
+              <div class={["nav-link cursor-pointer", { active: this.tab === "juz" }]}>
                 {this.t("general.juz")}
               </div>
             </li>
             <li class="nav-item" onClick={() => (this.tab = "page")}>
-              <div class={[ "nav-link cursor-pointer", { active: this.tab === "page" } ]}>
+              <div class={["nav-link cursor-pointer", { active: this.tab === "page" }]}>
                 {this.t("general.halaman")}
               </div>
             </li>
@@ -400,7 +395,12 @@ export default defineComponent({
             <div class="my-auto">
               <small>
                 <span class="me-2">{this.t("sort.by")}:</span>
-                <span class="text-primary cursor-pointer" onClick={() => { this.sort = this.sort === "desc" ? "asc" : "desc"; }}>
+                <span
+                  class="text-primary cursor-pointer"
+                  onClick={() => {
+                    this.sort = this.sort === "desc" ? "asc" : "desc";
+                  }}
+                >
                   <span class="text-uppercase">{this.t(`sort.${this.sort}`)}</span>
                   <font-awesome-icon icon={this.sort === "desc" ? "caret-down" : "caret-up"} class="ms-1" />
                 </span>
@@ -447,7 +447,8 @@ export default defineComponent({
             </div>
           </div>
         ) : this.tab === "surah" ? (
-          h(Surah, { sort: this.sort })
+          // Kirim extraTab ke komponen Surah agar validasinya disesuaikan
+          h(Surah, { sort: this.sort, extraTab: this.extraTab })
         ) : this.tab === "juz" ? (
           h(Juz, { sort: this.sort })
         ) : (
