@@ -155,7 +155,7 @@ export default defineComponent({
         AwalSurat: selectedStartSurah.value,
         AwalAyat: selectedStartVerse.value,
         AkhirSurat: selectedEndSurah.value,
-        AkhirKata: selectedEndVerse.value
+        AkhirAyat: selectedEndVerse.value
       };
 
       console.log("Recap Data:", recapPayload);

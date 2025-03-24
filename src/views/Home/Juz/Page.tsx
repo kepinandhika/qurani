@@ -24,7 +24,7 @@ export default defineComponent({
     const juzs = ref<Data>([]);
 
     juzs_response.value = (
-      await httpRetry.get<{ juzs: Juzs[] }>(makeUrl("juzs"), { delay: 1000 })
+      await httpRetry.get<{ juzs: Juzs[] }>(makeUrl("juzs"),)
     ).data.juzs.map((item) => ({
       ...item,
       chapters: Object.keys(item.verse_mapping)
