@@ -4,6 +4,7 @@ import { useChapters } from "@/hooks/chapters";
 import vSelect from "vue-select";
 import "vue-select/dist/vue-select.css";
 import toast from "@/lib/toast";
+import { useRoute } from "vue-router";
 
 interface MarkedError {
   word: any;
@@ -17,6 +18,7 @@ export default defineComponent({
   name: "Rekapan",
   components: { vSelect },
   setup() {
+    const route = useRoute();
     const chapters = useChapters();
     const markedErrors = ref<MarkedError[]>([]);
     const recapData = reactive({
@@ -24,7 +26,9 @@ export default defineComponent({
       kesimpulan: "",
       catatan: "",
       namapeserta: "",
-      surahDibaca: ""
+      surahDibaca: "",
+      awalHalaman: "",  // Awal Halaman
+      akhirHalaman: ""  // Akhir Halaman
     });
     const submissionNotification = ref("");
     const defaultPenyimak = { value: 2378, name: "Fatkul Amri" };
@@ -49,7 +53,7 @@ export default defineComponent({
       const participantName = localStorage.getItem("participantName") || "";
       // Jika participantName kosong, maka field peserta juga kosong
       recapData.namapeserta = participantName;
-      
+
       const selectedSurahLS = localStorage.getItem("selectedSurah");
       if (selectedSurahLS) {
         recapData.surahDibaca = selectedSurahLS;
@@ -63,7 +67,40 @@ export default defineComponent({
         selectedStartSurah.value = chapters.data.value[0].name_simple;
         selectedEndSurah.value = chapters.data.value[0].name_simple;
       }
+
+       // Jika di localStorage sudah ada nilai halaman (misalnya dari Chapter sebelumnya)
+       const startPage = localStorage.getItem("startPage");
+       const endPage = localStorage.getItem("endPage");
+       if (startPage && endPage) {
+         recapData.awalHalaman = startPage;
+         recapData.akhirHalaman = endPage;
+       } else {
+         // Fallback jika tidak ada, gunakan query (atau kosong)
+         const pageQuery = route.query.page as string;
+         if (pageQuery) {
+           recapData.awalHalaman = pageQuery;
+           recapData.akhirHalaman = pageQuery;
+         }
+       }
     });
+
+     // Watcher untuk mengupdate awal halaman saat surah awal berubah
+     watch(selectedStartSurah, (newVal) => {
+      const chapter = chapters.data.value.find(ch => ch.name_simple === newVal);
+      if (chapter && chapter.pages && chapter.pages.length > 0) {
+        // Ambil halaman pertama dari array pages
+        recapData.awalHalaman = chapter.pages[0].toString();
+      }
+    }, { immediate: true });
+
+    // Watcher untuk mengupdate akhir halaman saat surah akhir berubah
+    watch(selectedEndSurah, (newVal) => {
+      const chapter = chapters.data.value.find(ch => ch.name_simple === newVal);
+      if (chapter && chapter.pages && chapter.pages.length > 0) {
+        // Ambil halaman terakhir dari array pages
+        recapData.akhirHalaman = chapter.pages[chapter.pages.length - 1].toString();
+      }
+    }, { immediate: true });
 
     const selectedStartChapter = computed(() => {
       return chapters.data.value.find(
@@ -110,17 +147,21 @@ export default defineComponent({
           jenisKesalahan: err.Kesalahan
         }));
     });
-    const wordErrorCounts = computed(() => {
-      const counts: Record<string, number> = {};
+    const wordErrors = computed(() => {
+      const errorsByType: Record<string, { count: number; words: string[] }> = {};
       markedErrors.value.forEach((err) => {
-        if (!err.isVerseError) {
-          counts[err.Kesalahan] = (counts[err.Kesalahan] || 0) + 1;
+        if (!err.isVerseError && err.word) {
+          if (!errorsByType[err.Kesalahan]) {
+            errorsByType[err.Kesalahan] = { count: 0, words: [] };
+          }
+          errorsByType[err.Kesalahan].count += 1;
+          errorsByType[err.Kesalahan].words.push(err.word.text_uthmani);
         }
       });
-      return counts;
+      return errorsByType;
     });
 
-    function getErrorColor(error: string): string {
+    const getErrorColor = (error: string): string => {
       const colorMap: Record<string, string> = {
         'Gharib': '#CCCCCC',
         'Ghunnah': '#99CCFF',
@@ -139,19 +180,29 @@ export default defineComponent({
         'Ayat Lupa (tidak dibaca)': '#FA7656',
         'Ayat Waqof atau Washol (berhenti atau lanjut)': '#FE7D8F',
         'Ayat Waqof dan Ibtida (berhenti dan memulai)': '#90CBAA',
-      
       };
       return colorMap[error] || "#6c757d";
-    }
+    };
 
     function submitRecap() {
+      // Validasi kesimpulan dan catatan
+      if (!recapData.kesimpulan) {
+        toast.error("Pilih Kesimpulan");
+        return; // Berhenti jika kesimpulan belum diisi
+      }
+      // if (!recapData.catatan) {
+      //   toast.error("Perlu menambah catatan terlebih dahulu");
+      //   return; // Berhenti jika catatan belum diisi
+      // }
+
+      // Lanjutkan proses jika validasi berhasil
       const recapPayload = {
         Peserta: recapData.namapeserta,
         Penyimak: recapData.namaPenyimak,
         Kesimpulan: recapData.kesimpulan,
         Catatan: recapData.catatan,
         SalahAyat: verseErrors.value,
-        SalahKata: wordErrorCounts.value,
+        SalahKata: wordErrors.value,
         AwalSurat: selectedStartSurah.value,
         AwalAyat: selectedStartVerse.value,
         AkhirSurat: selectedEndSurah.value,
@@ -163,9 +214,9 @@ export default defineComponent({
       localStorage.setItem("recapData", JSON.stringify(recapPayload));
       toast.success("Hasil berhasil terkirim!");
 
-        // Reset data anggota/peserta di localStorage
-    localStorage.removeItem("selectedMember");
-    // localStorage.removeItem("selectedUser");
+      // Reset data anggota/peserta di localStorage
+      localStorage.removeItem("selectedMember");
+
       // Delay 3 detik, lalu alihkan ke halaman rumah
       setTimeout(() => {
         router.push({ name: "home" });
@@ -191,7 +242,7 @@ export default defineComponent({
     return {
       recapData,
       verseErrors,
-      wordErrorCounts,
+      wordErrors,
       submitRecap,
       goBack,
       getErrorColor,
@@ -205,7 +256,8 @@ export default defineComponent({
       totalEndVerses,
       endVerseOptions,
       chapters,
-      surahOptions
+      surahOptions,
+      markedErrors,
     };
   },
   render() {
@@ -248,7 +300,7 @@ export default defineComponent({
                 options={this.startVerseOptions}
                 placeholder="Cari ayat..."
                 clearable={false}
-              />
+              />  
             </div>
           </div>
 
@@ -276,16 +328,40 @@ export default defineComponent({
             </div>
           </div>
 
+          {/* Tambahan: Awal Halaman & Akhir Halaman */}
+          <div class="d-flex gap-3 mb-3">
+            <div class="flex-grow-1">
+              <label class="form-label">Awal Halaman:</label>
+              <input
+                type="text"
+                class="form-control"
+                v-model={this.recapData.awalHalaman}
+                readonly
+                placeholder="Awal Halaman"
+              />
+            </div>
+            <div class="flex-grow-1">
+              <label class="form-label">Akhir Halaman:</label>
+              <input
+                type="text"
+                class="form-control"
+                v-model={this.recapData.akhirHalaman}
+                readonly
+                placeholder="Akhir Halaman"
+              />
+            </div>
+          </div>
+
           <div class="mb-3">
             <label class="form-label">Kesimpulan</label>
             <select class="form-select" style="max-width: 200px;" v-model={this.recapData.kesimpulan}>
               <option value="" style="color: grey;">Pilih Kesimpulan</option>
               <option value="Lancar">Lancar</option>
-//               <option value="Tidak Lancar">Tidak Lancar</option>
-//               <option value="Lulus">Lulus</option>
-//               <option value="Tidak Lulus">Tidak Lulus</option>
-//               <option value="Mumtaz">Mumtaz</option>
-//               <option value="Dhoif">Dhoif</option>
+              <option value="Tidak Lancar">Tidak Lancar</option>
+              <option value="Lulus">Lulus</option>
+              <option value="Tidak Lulus">Tidak Lulus</option>
+              <option value="Mumtaz">Mumtaz</option>
+              <option value="Dhoif">Dhoif</option>
             </select>
           </div>
           <div class="mb-3">
@@ -313,10 +389,8 @@ export default defineComponent({
               {this.verseErrors.map((err, index) => (
                 <li key={index} class="list-group-item">
                   <strong>
-                    Surah {err.surah}, Ayat {err.ayat}
+                  {err.surah}, Ayat {err.ayat} : 
                   </strong>
-                  <br />
-                  Kesalahan :{" "}
                   <span
                     class="badge"
                     style={{
@@ -324,7 +398,8 @@ export default defineComponent({
                       borderWidth: "2px",
                       fontWeight: "500",
                       textAlign: "left",
-                      color: "#000000"
+                      color: "#000000",
+                      fontSize: "15px"
                     }}
                   >
                     {err.jenisKesalahan}
@@ -338,19 +413,25 @@ export default defineComponent({
         {/* Kesalahan Kata */}
         <div class="card p-4 shadow-sm">
           <h5>Kesalahan Kata:</h5>
-          {Object.entries(this.wordErrorCounts).length > 0 ? (
+          {this.markedErrors.filter(err => !err.isVerseError).length > 0 ? (
             <ul class="list-group">
-              {Object.entries(this.wordErrorCounts).map(([error, count]) => (
-                <li class="list-group-item">
-                  <span
-                    class="badge me-2"
-                    style={{ backgroundColor: this.getErrorColor(error) }}
-                  >
-                    {count}
-                  </span>
-                  {error}
-                </li>
-              ))}
+              {this.markedErrors
+                .filter(err => !err.isVerseError)
+                .map((err, index) => (
+                  <li key={index} class="list-group-item">
+                    <span
+                      class="badge me-2"
+                      style={{
+                        backgroundColor: this.getErrorColor(err.Kesalahan),
+                        color: "#000000",
+                        fontSize: "20px"
+                      }}
+                    >
+                      {err.word.text_uthmani}
+                    </span>
+                    <strong>{err.Kesalahan}</strong> 
+                  </li>
+                ))}
             </ul>
           ) : (
             <p class="text-muted">Tidak ada kesalahan kata</p>

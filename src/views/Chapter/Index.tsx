@@ -129,7 +129,7 @@ export default defineComponent({
                     v-model:chapterId={this.tafsirModal.chapterId}
                     v-model:verseNumber={this.tafsirModal.verseNumber}
                 />
-    
+                    
                 <ChapterLayout
                     chapter={this.chapter}
                     page={this.page}

@@ -1,5 +1,5 @@
 import { Chapters, QuranReader, Words } from "@/types";
-import { defineComponent, PropType, ref, watch, onBeforeUnmount, VNode, computed, Teleport, onMounted } from "vue";
+import { defineComponent, PropType, ref, watch, onBeforeUnmount, computed, Teleport, onMounted, VNode } from "vue";
 import { Tooltip as BSTooltip, Popover as BSPopover } from "bootstrap";
 import { useI18n } from "vue-i18n";
 import { useChapters } from "@/hooks/chapters";
@@ -13,13 +13,32 @@ import styles from "./ArabicText.module.scss";
 import AlertDialog from "../AlertDialog/AlertDialog";
 import { useSettings } from "@/hooks/settings";
 
-// Interface untuk data kesalahan yang ditandai
+// Fungsi untuk menentukan halaman berdasarkan mapping ayat
+export function getPageForVerse(surah: string, verse: number): number {
+  // Contoh mapping khusus untuk surah tertentu
+  const pageMapping: Record<string, { start: number; end: number; page: number }[]> = {
+    'Al-Baqarah': [
+      { start: 1, end: 5, page: 2 },
+      { start: 6, end: 16, page: 3 },
+      { start: 17, end: 286, page: 4 }
+    ],
+    // Tambahkan mapping untuk surah lain jika ada
+  };
+
+  if (pageMapping[surah]) {
+    const mapping = pageMapping[surah].find(m => verse >= m.start && verse <= m.end);
+    if (mapping) return mapping.page;
+  }
+  // Fallback: misalnya bagi jumlah ayat dengan 15
+  return Math.ceil(verse / 15);
+}
+
 interface MarkedError {
   word: Words | null; // Jika null, berarti kesalahan pada level ayat
   Kesalahan: string;
   verseNumber: number;
   chapterName: string;
-  isVerseError: boolean; // Menandakan apakah kesalahan terjadi pada level ayat
+  isVerseError: boolean;
 }
 
 export default defineComponent({
@@ -68,99 +87,88 @@ export default defineComponent({
     },
   },
   setup(props) {
-    // Inisialisasi i18n dan hooks
     const { t } = useI18n();
     const chapters = useChapters();
     const settings = useSettings();
     const { fontType } = settings;
 
-    // Instance tooltip dan popover untuk Bootstrap
+    // Tooltip dan popover Bootstrap
     const tooltipInstance = ref<Record<number, BSTooltip>>({});
     const popoverInstance = ref<Record<number, BSPopover>>({});
     const popover = ref<BSPopover | null>(null);
+    const refs = ref<{ popoverContent: HTMLElement | null }>({ popoverContent: null });
 
-    // State untuk hover dan modal
+    // State hover dan modal
     const isHover = ref<boolean>(false);
     const isModalVisible = ref<boolean>(false);
     const modalContent = ref<string>("");
 
-    // Ref untuk element konten popover
-    const refs = ref<{ popoverContent: HTMLElement | null }>({ popoverContent: null });
+    // State koreksi kesalahan
+    const correctionTarget = ref<'ayat' | 'kata'>('kata');
+    const selectedWord = ref<Words | null>(null);
+    const markedErrors = ref<MarkedError[]>([]);
 
-    // Computed key untuk ayat (contoh: "2:255")
+    // Contoh computed key untuk ayat (misal: "2:255")
     const verseKey = computed<string>(() => {
-      return [props.chapterId, props.verseNumber].filter((v) => v !== undefined).join(":");
+      return [props.chapterId, props.verseNumber].filter(v => v !== undefined).join(":");
     });
 
-    // Mendapatkan data chapter dari hook
-    const chapter = computed<Chapters | null>(() => {
-      return props.chapterId ? chapters.find(props.chapterId) : null;
+    // Dapatkan data chapter berdasarkan chapterId
+    const chapter = computed(() => {
+      return props.chapterId ? chapters.data.value.find(ch => ch.id === props.chapterId) : null;
     });
 
-    // Teks Uthmani gabungan untuk ayat
-    const textUthmani = computed<string>(() => {
-      return props.words.map((word) => word.text_uthmani).join(" ");
+    // Gabungan teks Uthmani
+    const textUthmani = computed(() => {
+      return props.words.map(word => word.text_uthmani).join(" ");
     });
 
-    // Menentukan apakah tombol tambahan (Bookmark, Copy, dsb) akan ditampilkan
-    const shouldUseButton = computed<boolean>(() => {
+    // Tombol tambahan
+    const shouldUseButton = computed(() => {
       return props.buttons.length > 0 && props.chapterId !== undefined && props.verseNumber !== undefined;
     });
 
-    // State untuk menentukan target penandaan: 'ayat' atau 'kata'
-    const correctionTarget = ref<'ayat' | 'kata'>('kata');
-    // Kata yang dipilih berdasarkan id (unik) sehingga jika ada kata dengan teks sama, hanya satu yang terpengaruh
-    const selectedWord = ref<Words | null>(null);
-    // Array untuk menyimpan data kesalahan yang ditandai
-    const markedErrors = ref<MarkedError[]>([]);
+    // --- Perhitungan halaman berdasarkan ayat ---
+    // Computed untuk menentukan halaman saat ini berdasarkan mapping
+    const currentPage = computed(() => {
+      if (props.chapterId && props.verseNumber) {
+        const currentChapter = chapters.data.value.find(ch => ch.id === props.chapterId);
+        if (currentChapter) {
+          return getPageForVerse(currentChapter.name_simple, props.verseNumber);
+        }
+      }
+      return 0;
+    });
 
-    // Warna background untuk tiap tipe kesalahan
-    const errorColors: { [key: string]: string } = {
-      'Gharib': '#CCCCCC',
-      'Ghunnah': '#99CCFF',
-      'Harokat Tertukar': '#DFF18F',
-      'Huruf Tambah/Kurang': '#F4ACB6',
-      'Lupa (tidak dibaca)': '#FA7656',
-      'Mad (panjang pendek)': '#FFCC99',
-      'Makhroj (pengucapan huruf)': '#F4A384',
-      'Nun Mati dan Tanwin': '#F8DD74',
-      'Qalqalah (memantul)': '#D5B6D4',
-      'Tasydid (penekanan)': '#B5C9DF',
-      'Urutan Huruf atau Kata': '#FE7D8F',
-      'Waqof atau Washol (berhenti atau lanjut)': '#A1D4CF',
-      'Waqof dan Ibtida (berhenti dan memulai)': '#90CBAA',
-      'Lainnya': '#CC99CC',
-      'Ayat Lupa (tidak dibaca)': '#FA7656',
-      'Ayat Waqof atau Washol (berhenti atau lanjut)': '#FE7D8F',
-      'Ayat Waqof dan Ibtida (berhenti dan memulai)': '#90CBAA',
-     
-    };
+    // Simpan halaman saat ini ke localStorage (atau gunakan sesuai kebutuhan)
+    onMounted(() => {
+      localStorage.setItem("currentPage", currentPage.value.toString());
+    });
+    // --- End Perhitungan halaman ---
 
-    // Fungsi untuk menentukan apakah kata yang berada pada posisi tertentu di-highlight
+    // Fungsi dan state lainnya (tooltip, modal, markError, dll) tetap sama...
+    // ... (kode untuk tooltipInstance, popoverInstance, showWrongWordModal, getWordStyle, dll)
+
     function isHighlightWord(position: number) {
       return (props.highlight === position);
     }
 
-    // Fungsi inisialisasi popover
     function onInitPopover(key: number) {
       return function (popover: BSPopover) {
         popoverInstance.value[key] = popover;
       };
     }
 
-    // Fungsi untuk menangani klik dan tahan (click hold) pada tombol
     function onClickHold(key: number) {
       return function () {
-        Object.keys(popoverInstance.value).forEach((keys) =>
-          Number(keys) !== key && popoverInstance.value[Number(keys)]?.hide()
+        Object.keys(popoverInstance.value).forEach((k) =>
+          Number(k) !== key && popoverInstance.value[Number(k)]?.hide()
         );
         popoverInstance.value[key]?.toggle();
         setTimeout(() => tooltipInstance.value[key]?.hide(), 100);
       };
     }
 
-    // Fungsi untuk menampilkan modal ketika kata ditekan
-    // Periksa kesalahan berdasarkan id kata, sehingga jika ada kata yang sama teksnya, hanya instance yang ditekan yang diambil
     function showWrongWordModal(word: Words, isVerseEnd = false) {
       const isAlreadyMarked = markedErrors.value.some((err) =>
         (isVerseEnd && err.verseNumber === props.verseNumber) ||
@@ -168,14 +176,12 @@ export default defineComponent({
       );
 
       if (isAlreadyMarked) {
-        // Jika sudah ditandai, tampilkan opsi "Hapus Tanda"
         correctionTarget.value = isVerseEnd ? 'ayat' : 'kata';
         modalContent.value = isVerseEnd
           ? `Hapus tanda pada ayat ${props.verseNumber}`
           : `Hapus tanda pada kata "${word.text_uthmani}"`;
         isModalVisible.value = true;
       } else {
-        // Jika belum ditandai, tampilkan opsi untuk menambahkan tanda
         correctionTarget.value = isVerseEnd ? 'ayat' : 'kata';
         modalContent.value = isVerseEnd
           ? `Surat ${chapter.value?.name_simple} Ayat ke ${props.verseNumber}`
@@ -185,10 +191,8 @@ export default defineComponent({
       selectedWord.value = word;
     }
 
-    // Fungsi untuk mendapatkan gaya (style) untuk sebuah kata
-    // Pengecekan dilakukan berdasarkan id kata
     function getWordStyle(word: Words) {
-      const error = markedErrors.value.find((err) =>
+      const error = markedErrors.value.find(err =>
         (err.isVerseError && err.verseNumber === props.verseNumber) ||
         (!err.isVerseError && err.word?.id === word.id)
       );
@@ -198,15 +202,12 @@ export default defineComponent({
       return {};
     }
 
-    // Fungsi untuk menangani event keydown, khususnya tombol Escape untuk menutup modal
     function handleKeydown(e: KeyboardEvent) {
       if (e.key === "Escape") {
         closeModal();
       }
     }
 
-    // Fungsi untuk menandai kesalahan
-    // Pastikan hanya instance kata yang dipilih (berdasarkan id) yang ditandai
     function markError(word: Words | null, Kesalahan: string, isVerseError: boolean = false) {
       if (word || isVerseError) {
         markedErrors.value.push({
@@ -216,43 +217,29 @@ export default defineComponent({
           chapterName: chapter.value?.name_simple || '',
           isVerseError,
         });
-        saveMarkedErrors();
+        localStorage.setItem('markedErrors', JSON.stringify(markedErrors.value));
         closeModal();
       }
     }
 
-    // Fungsi untuk menghapus tanda kesalahan
-    // Untuk kata, hapus hanya jika id kata sama
     function removeMarkedError(word: Words | null, isVerseError: boolean = false) {
       if (isVerseError) {
-        markedErrors.value = markedErrors.value.filter((err) =>
+        markedErrors.value = markedErrors.value.filter(err =>
           err.verseNumber !== props.verseNumber || !err.isVerseError
         );
       } else if (word) {
-        markedErrors.value = markedErrors.value.filter((err) =>
+        markedErrors.value = markedErrors.value.filter(err =>
           err.word?.id !== word.id
         );
       }
-      saveMarkedErrors();
+      localStorage.setItem('markedErrors', JSON.stringify(markedErrors.value));
       closeModal();
     }
 
-    // Fungsi untuk menyimpan data kesalahan ke localStorage
-    function saveMarkedErrors() {
-      try {
-        localStorage.setItem('markedErrors', JSON.stringify(markedErrors.value));
-        // console.log('Data kesalahan berhasil disimpan:', markedErrors.value);
-      } catch (error) {
-        // console.error("Gagal menyimpan data kesalahan:", error);
-      }
-    }
-
-    // Fungsi untuk menutup modal
     function closeModal() {
       isModalVisible.value = false;
     }
 
-    // Fungsi untuk menampilkan tooltip saat mouse over
     function onMouseOver(key: number) {
       isHover.value = true;
       if (!props.showTooltipWhenHighlight || !isHighlightWord(key)) {
@@ -260,7 +247,6 @@ export default defineComponent({
       }
     }
 
-    // Fungsi untuk menyembunyikan tooltip saat mouse leave
     function onMouseLeave(key: number) {
       isHover.value = false;
       if (!props.showTooltipWhenHighlight || !isHighlightWord(key)) {
@@ -268,7 +254,6 @@ export default defineComponent({
       }
     }
 
-    // Fungsi pembungkus untuk kata, mengaplikasikan Popover jika tombol tambahan diaktifkan
     function wordWrapper(word: Words, children: VNode) {
       if (!shouldUseButton.value) {
         return <>{children}</>;
@@ -294,66 +279,75 @@ export default defineComponent({
       }
     }
 
-    // Fungsi untuk memilih kata berdasarkan posisinya (digunakan sebagai fallback, namun pemilihan utama didasarkan pada id)
     function selectWord(position: number) {
-      selectedWord.value = props.words.find((word) => word.position === position) || null;
+      selectedWord.value = props.words.find(word => word.position === position) || null;
     }
 
-    // Fungsi auto refresh: mengambil ulang data markedErrors dari localStorage
     function autoRefresh() {
       const savedErrors = localStorage.getItem('markedErrors');
       if (savedErrors) {
         markedErrors.value = JSON.parse(savedErrors);
-        // console.log('Auto refresh: Data kesalahan diperbarui.', markedErrors.value);
       }
     }
-    // Timer untuk auto refresh
     let autoRefreshTimer: number;
-
-    // Saat komponen dimuat, ambil data kesalahan yang sudah tersimpan (jika ada)
     onMounted(() => {
       const savedErrors = localStorage.getItem('markedErrors');
       if (savedErrors) {
         markedErrors.value = JSON.parse(savedErrors);
-        // console.log('Data kesalahan dimuat:', markedErrors.value);
       }
       window.addEventListener("keydown", handleKeydown);
-      // Inisialisasi auto refresh setiap 30 detik
       autoRefreshTimer = window.setInterval(autoRefresh, 1000);
     });
     
-    // Hapus event listener dan timer saat komponen akan di-unmount
     onBeforeUnmount(() => {
       window.removeEventListener("keydown", handleKeydown);
       if (autoRefreshTimer) {
         window.clearInterval(autoRefreshTimer);
       }
       isHover.value = false;
-      Object.keys(tooltipInstance.value).forEach((key) =>
+      Object.keys(tooltipInstance.value).forEach(key =>
         tooltipInstance.value[Number(key)]?.hide()
       );
-      Object.keys(popoverInstance.value).forEach((key) =>
+      Object.keys(popoverInstance.value).forEach(key =>
         popoverInstance.value[Number(key)]?.hide()
       );
     });
     
-    // Watcher untuk properti highlight
     watch(() => props.highlight, (value, oldValue) => {
       if (!props.showTooltipWhenHighlight) return;
       if (typeof value === "number") tooltipInstance.value[value]?.show();
       if (typeof oldValue === "number") tooltipInstance.value[oldValue]?.hide();
     });
     
-    // Watcher untuk properti showTooltipWhenHighlight
     watch(() => props.showTooltipWhenHighlight, (value) => {
       if (typeof props.highlight === "number") {
         tooltipInstance.value[props.highlight]?.[value ? "show" : "hide"]();
       }
     });
     
-    // Fungsi untuk mendapatkan style khusus untuk ayat yang memiliki kesalahan
+    // Warna background untuk tiap tipe kesalahan
+    const errorColors: { [key: string]: string } = {
+      'Gharib': '#CCCCCC',
+      'Ghunnah': '#99CCFF',
+      'Harokat Tertukar': '#DFF18F',
+      'Huruf Tambah/Kurang': '#F4ACB6',
+      'Lupa (tidak dibaca)': '#FA7656',
+      'Mad (panjang pendek)': '#FFCC99',
+      'Makhroj (pengucapan huruf)': '#F4A384',
+      'Nun Mati dan Tanwin': '#F8DD74',
+      'Qalqalah (memantul)': '#D5B6D4',
+      'Tasydid (penekanan)': '#B5C9DF',
+      'Urutan Huruf atau Kata': '#FE7D8F',
+      'Waqof atau Washol (berhenti atau lanjut)': '#A1D4CF',
+      'Waqof dan Ibtida (berhenti dan memulai)': '#90CBAA',
+      'Lainnya': '#CC99CC',
+      'Ayat Lupa (tidak dibaca)': '#FA7656',
+      'Ayat Waqof atau Washol (berhenti atau lanjut)': '#FE7D8F',
+      'Ayat Waqof dan Ibtida (berhenti dan memulai)': '#90CBAA',
+    };
+
     function getVerseErrorStyle() {
-      const verseError = markedErrors.value.find((err) =>
+      const verseError = markedErrors.value.find(err =>
         err.isVerseError && err.verseNumber === props.verseNumber
       );
       if (verseError && verseError.Kesalahan in errorColors) {
@@ -389,12 +383,6 @@ export default defineComponent({
       onMouseLeave,
       wordWrapper,
       showWrongWordModal,
-      handleVerseClick: () => {
-        if (props.chapterId && props.verseNumber) {
-          modalContent.value = `Anda mengklik seluruh ayat ${props.verseNumber} dari surat ${props.chapterId}`;
-          isModalVisible.value = true;
-        }
-      },
       modalContent,
       isModalVisible,
       AlertDialog,
@@ -408,36 +396,9 @@ export default defineComponent({
       markError,
       removeMarkedError,
       getVerseErrorStyle,
-      viewAllMarkedErrors: () => {
-        try {
-          const data = localStorage.getItem('markedErrors');
-          if (!data) {
-            // console.log('Tidak ada data kesalahan yang tersimpan.');
-            return;
-          }
-          const errors = JSON.parse(data);
-          const verseErrors = errors.filter((err: { isVerseError: any; }) => err.isVerseError);
-          const wordErrors = errors.filter((err: { isVerseError: any; }) => !err.isVerseError);
-          if (verseErrors.length > 0) {
-            // console.log('Rekapan Kesalahan pada Ayat:');
-            verseErrors.forEach((error: { verseNumber: any; chapterName: any; Kesalahan: any; }, index: number) => {
-              //console.log(`${index + 1}. Ayat ${error.verseNumber} (${error.chapterName}): ${error.Kesalahan}`);
-            });
-          } else {
-            //console.log('Tidak ada kesalahan pada ayat yang ditandai.');
-          }
-          if (wordErrors.length > 0) {
-            //console.log('Rekapan Kesalahan pada Kata:');
-            wordErrors.forEach((error: { word: { text_uthmani: any; position: any; }; verseNumber: any; chapterName: any; Kesalahan: any; }, index: number) => {
-              //console.log(`${index + 1}. Kata "${error.word?.text_uthmani}" (Posisi: ${error.word?.position}, Ayat ${error.verseNumber}, ${error.chapterName}): ${error.Kesalahan}`);
-            });
-          } else {
-            //console.log('Tidak ada kesalahan pada kata yang ditandai.');
-          }
-        } catch (error) {
-          //console.error("Gagal memuat rekapan data kesalahan:", error);
-        }
-      }
+      currentPage, // halaman untuk ayat ini
+      autoRefresh,
+      goBack: () => router.go(-1)
     };
   },
   render() {
@@ -585,5 +546,5 @@ export default defineComponent({
         </span>
       </>
     );
-  }
+  },
 });

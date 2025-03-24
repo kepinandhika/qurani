@@ -40,13 +40,13 @@ export default defineComponent({
                 if (this.extraTab === "grup") {
                   const selMember = localStorage.getItem("selectedMember");
                   if (!selMember || selMember === "null") {
-                    toast.error("Perlu memilih anggota terlebih dahulu");
+                    toast.error("Pilih Anggota");
                     return;
                   }
                 } else if (this.extraTab === "pengguna") {
                   const selUser = localStorage.getItem("selectedUser");
                   if (!selUser || selUser === "null") {
-                    toast.error("Perlu memilih teman terlebih dahulu");
+                    toast.error("Pilih Teman");
                     return;
                   }
                 }
