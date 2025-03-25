@@ -238,6 +238,42 @@ export default defineComponent({
     const surahOptions = computed(() => {
       return chapters.data.value.map((ch: any) => ch.name_simple);
     });
+    const errorsByPage = computed(() => {
+      const pages: Record<number, { verseErrors: MarkedError[]; wordErrors: MarkedError[] }> = {};
+
+      // Pastikan kita memproses semua halaman dalam range
+      const startPage = parseInt(recapData.awalHalaman);
+      const endPage = parseInt(recapData.akhirHalaman);
+
+      // Inisialisasi semua halaman dalam range terlebih dahulu
+      for (let page = startPage; page <= endPage; page++) {
+        pages[page] = { verseErrors: [], wordErrors: [] };
+      }
+
+      // Isi dengan data error yang ada
+      markedErrors.value.forEach(err => {
+        const page = err.word?.page || getVersePage(err.chapterName, err.verseNumber);
+
+        if (page >= startPage && page <= endPage) {
+          if (err.isVerseError) {
+            pages[page].verseErrors.push(err);
+          } else {
+            pages[page].wordErrors.push(err);
+          }
+        }
+      });
+
+      return pages;
+    });
+
+    const getVersePage = (chapterName: string, verseNumber: number): number => {
+      const chapter = chapters.data.value.find(ch => ch.name_simple === chapterName);
+      if (!chapter || !chapter.pages || chapter.pages.length === 0) return 0;
+
+      // Ini contoh sederhana - Anda mungkin perlu mapping yang lebih akurat
+      // antara ayat dan halaman
+      return chapter.pages[0]; // Mengembalikan halaman pertama surah
+    };
 
     return {
       recapData,
@@ -258,6 +294,8 @@ export default defineComponent({
       chapters,
       surahOptions,
       markedErrors,
+      getVersePage,
+      errorsByPage
     };
   },
   render() {
@@ -379,63 +417,94 @@ export default defineComponent({
           </div>
         </div>
 
-        {/* Kesalahan Ayat */}
-        <div class="card p-4 shadow-sm mb-3">
-          <h5>Kesalahan Ayat:</h5>
-          {this.verseErrors.length === 0 ? (
-            <p class="text-muted">Tidak ada kesalahan ayat.</p>
-          ) : (
-            <ul class="list-group">
-              {this.verseErrors.map((err, index) => (
-                <li key={index} class="list-group-item">
-                  <strong>
-                  {err.surah}, Ayat {err.ayat} : 
-                  </strong>
-                  <span
-                    class="badge"
-                    style={{
-                      backgroundColor: this.getErrorColor(err.jenisKesalahan),
-                      borderWidth: "2px",
-                      fontWeight: "500",
-                      textAlign: "left",
-                      color: "#000000",
-                      fontSize: "15px"
-                    }}
-                  >
-                    {err.jenisKesalahan}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        {/* Kesalahan  */}
+        <div class="card p-4 shadow-sm mb-4">
+          {/* Daftar Halaman */}
+          {Object.entries(this.errorsByPage)
+            .sort(([pageA], [pageB]) => parseInt(pageA) - parseInt(pageB))
+            .map(([page, errors]) => (
+              <div key={page} class="card p-4 shadow-sm mb-3">
+                <div class="card shadow-sm mb-4" style={{
+                  border: "none",
+                  borderRadius: "12px",
+                  overflow: "hidden"
+                }}>
+                  <div class="card-header p-3 text-center" style={{
+                    background: "linear-gradient(135deg,rgb(162, 240, 223), rgb(40, 167, 161))",
+                    border: "none",
+                    color: "#2C3E50",
+                    fontSize: "1.2rem",
+                    fontWeight: "600",
+                    textShadow: "0 1px 2px rgba(255,255,255,0.3)",
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+                  }}>
+                    <div class="d-flex justify-content-center align-items-center">
+                      <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                      <span>Kesalahan Halaman {page}</span>
+                    </div>
+                  </div>
+                </div>
 
-        {/* Kesalahan Kata */}
-        <div class="card p-4 shadow-sm">
-          <h5>Kesalahan Kata:</h5>
-          {this.markedErrors.filter(err => !err.isVerseError).length > 0 ? (
-            <ul class="list-group">
-              {this.markedErrors
-                .filter(err => !err.isVerseError)
-                .map((err, index) => (
-                  <li key={index} class="list-group-item">
-                    <span
-                      class="badge me-2"
-                      style={{
-                        backgroundColor: this.getErrorColor(err.Kesalahan),
-                        color: "#000000",
-                        fontSize: "20px"
-                      }}
-                    >
-                      {err.word.text_uthmani}
-                    </span>
-                    <strong>{err.Kesalahan}</strong> 
-                  </li>
-                ))}
-            </ul>
-          ) : (
-            <p class="text-muted">Tidak ada kesalahan kata</p>
-          )}
+
+                {/* Kesalahan Ayat untuk halaman ini */}
+                <div class="mb-3">
+                  <h6>Kesalahan Ayat:</h6>
+                  {errors.verseErrors.length === 0 ? (
+                    <p class="text-muted">Tidak ada kesalahan ayat.</p>
+                  ) : (
+                    <ul class="list-group">
+                      {errors.verseErrors.map((err, idx) => (
+                        <li key={`verse-${idx}`} class="list-group-item">
+                          <strong>
+                            {err.chapterName}, Ayat {err.verseNumber}:
+                          </strong>
+                          <span
+                            class="badge ms-2"
+                            style={{
+                              backgroundColor: this.getErrorColor(err.Kesalahan),
+                              borderWidth: "2px",
+                              fontWeight: "500",
+                              textAlign: "left",
+                              color: "#000000",
+                              fontSize: "15px"
+                            }}
+                          >
+                            {err.Kesalahan}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                {/* Kesalahan Kata untuk halaman ini */}
+                <div>
+                  <h6>Kesalahan Kata:</h6>
+                  {errors.wordErrors.length === 0 ? (
+                    <p class="text-muted">Tidak ada kesalahan kata.</p>
+                  ) : (
+                    <ul class="list-group">
+                      {errors.wordErrors.map((err, idx) => (
+                        <li key={`word-${idx}`} class="list-group-item">
+                          <span
+                            class="badge me-2"
+                            style={{
+                              backgroundColor: this.getErrorColor(err.Kesalahan),
+                              color: "#000000",
+                              fontSize: "20px"
+                            }}
+                          >
+                            {err.word.text_uthmani}
+                          </span>
+                          <strong>{err.Kesalahan}</strong>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            ))
+          }
         </div>
       </div>
     );
