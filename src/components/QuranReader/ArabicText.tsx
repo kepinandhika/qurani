@@ -20,6 +20,8 @@ interface MarkedError {
   verseNumber: number;
   chapterName: string;
   isVerseError: boolean; // Menandakan apakah kesalahan terjadi pada level ayat
+  page?: number; // Nomor halaman (diambil dari word.page_number)
+  
 }
 
 export default defineComponent({
@@ -208,6 +210,15 @@ export default defineComponent({
     // Fungsi untuk menandai kesalahan
     // Pastikan hanya instance kata yang dipilih (berdasarkan id) yang ditandai
     function markError(word: Words | null, Kesalahan: string, isVerseError: boolean = false) {
+      // Tentukan nomor halaman
+      let pageNumber: number | undefined;
+      if (word) {
+        pageNumber = word.page_number;
+      } else if (props.words.length > 0) {
+        // Untuk kesalahan ayat, gunakan halaman dari kata pertama di ayat
+        pageNumber = props.words[0].page_number;
+      }
+    
       if (word || isVerseError) {
         markedErrors.value.push({
           word,
@@ -215,6 +226,7 @@ export default defineComponent({
           verseNumber: props.verseNumber!,
           chapterName: chapter.value?.name_simple || '',
           isVerseError,
+          page: pageNumber,
         });
         saveMarkedErrors();
         closeModal();
@@ -568,7 +580,7 @@ export default defineComponent({
                 ]}
                 style={this.getWordStyle(word)}
               >
-                {word.text_uthmani}
+                {[word.text_uthmani]}
               </div>
               {this.showTransliterationInline && (
                 <div class="text-center mt-1 mb-1">
