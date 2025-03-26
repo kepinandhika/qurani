@@ -12,6 +12,7 @@ interface MarkedError {
   verseNumber: number;
   chapterName: string;
   isVerseError: boolean;
+  page?: number;
 }
 
 export default defineComponent({
@@ -240,47 +241,43 @@ export default defineComponent({
       return chapters.data.value.map((ch: any) => ch.name_simple);
     });
 
-    const errorsByPage = computed(() => {
-      const pages: Record<number, { 
-        verseErrors: MarkedError[], 
-        wordErrors: MarkedError[] 
-      }> = {};
-    
-      // Pastikan awalHalaman dan akhirHalaman ada dan valid
-      const startPage = parseInt(recapData.awalHalaman) || 1;
-      const endPage = parseInt(recapData.akhirHalaman) || 1;
-    
-      // Inisialisasi semua halaman dalam range
-      for (let page = startPage; page <= endPage; page++) {
-        pages[page] = { verseErrors: [], wordErrors: [] };
-      }
-    
-      // Isi data kesalahan
-      markedErrors.value.forEach(err => {
-        // Mendapatkan nomor halaman dari properti err.word.page jika ada,
-        // jika tidak, gunakan fungsi getVersePage untuk mendapatkan perkiraan halaman
-        const page = err.word?.page_number || getVersePage(err.chapterName, err.verseNumber);
-
-        if (page >= startPage && page <= endPage) {
-          if (err.isVerseError) {
-            pages[page].verseErrors.push(err);
-          } else {
-            pages[page].wordErrors.push(err);
-          }
+      // Mengelompokkan kesalahan berdasarkan nomor halaman
+      const errorsByPage = computed(() => {
+        const pages: Record<number, { verseErrors: MarkedError[], wordErrors: MarkedError[] }> = {};
+        const startPage = parseInt(recapData.awalHalaman) || 1;
+        const endPage = parseInt(recapData.akhirHalaman) || 1;
+        
+        // Inisialisasi untuk setiap halaman dalam rentang
+        for (let page = startPage; page <= endPage; page++) {
+          pages[page] = { verseErrors: [], wordErrors: [] };
         }
+        
+        markedErrors.value.forEach(err => {
+          // Jika err memiliki properti page, gunakan itu; jika tidak, hitung dengan getVersePage
+          const page = err.page || (err.word?.page_number ? err.word.page_number : getVersePage(err.chapterName, err.verseNumber));
+          if (page >= startPage && page <= endPage) {
+            if (err.isVerseError) {
+              pages[page].verseErrors.push(err);
+            } else {
+              pages[page].wordErrors.push(err);
+            }
+          }
+        });
+        
+        return pages;
       });
     
-      return pages;
-    });
     
-    const getVersePage = (chapterName: string, verseNumber: number): number => {
-      const chapter = chapters.data.value.find(ch => ch.name_simple === chapterName);
-      if (!chapter?.pages) return 0; 
+      // Fungsi untuk menghitung halaman ayat bila data tidak tersedia di word
+      const getVersePage = (chapterName: string, verseNumber: number): number => {
+        const chapter = chapters.data.value.find(ch => ch.name_simple === chapterName);
+        if (!chapter || !chapter.pages || chapter.pages.length === 0) return 0;
+        const totalVerses = chapter.verses_count;
+        const totalPages = chapter.pages.length;
+        const pageIndex = Math.floor(((verseNumber - 1) / totalVerses) * totalPages);
+        return chapter.pages[Math.min(pageIndex, totalPages - 1)];
+      };
     
-      // Contoh sederhana: Ambil halaman pertama surah
-      // (Anda perlu implementasi lebih akurat sesuai data mushaf Anda)
-      return chapter.pages[0];
-    };
     // const getVersePage = (chapterName: string, verseNumber: number): number => {
     //   const chapter = chapters.data.value.find(ch => ch.name_simple === chapterName);
     //   if (!chapter || !chapter.pages || chapter.pages.length === 0) return 0;
@@ -289,6 +286,27 @@ export default defineComponent({
     //   // antara ayat dan halaman
     //   return chapter.pages[0]; // Mengembalikan halaman pertama surah
     // };
+    const pageConclusions = reactive<Record<string, string>>({});
+    const pageNotes = reactive<Record<string, string>>({});
+
+    // Inisialisasi nilai default jika perlu
+    watch(() => recapData.awalHalaman, (newVal, oldVal) => {
+      const start = parseInt(newVal) || 1;
+      const end = parseInt(recapData.akhirHalaman) || 1;
+      for (let page = start; page <= end; page++) {
+        if (!pageConclusions[page]) pageConclusions[page] = "";
+        if (!pageNotes[page]) pageNotes[page] = "";
+      }
+    }, { immediate: true });
+
+    watch(() => recapData.akhirHalaman, (newVal, oldVal) => {
+      const start = parseInt(recapData.awalHalaman) || 1;
+      const end = parseInt(newVal) || 1;
+      for (let page = start; page <= end; page++) {
+        if (!pageConclusions[page]) pageConclusions[page] = "";
+        if (!pageNotes[page]) pageNotes[page] = "";
+      }
+    }, { immediate: true });
 
     return {
       recapData,
@@ -310,7 +328,9 @@ export default defineComponent({
       surahOptions,
       markedErrors,
       getVersePage,
-      errorsByPage
+      errorsByPage,
+      pageConclusions,
+      pageNotes 
     };
   },
   render() {
@@ -463,11 +483,23 @@ export default defineComponent({
               <div class="mb-3">
                 <h6>Kesalahan Ayat:</h6>
                 {errors.verseErrors.length === 0 ? (
-                  <p class="text-muted">  </p>
+                  <p class="text-muted"> Tidak ada kesalahan ayat.</p>
                 ) : (
                   <ul style={{ textAlign: "left", listStyleType: "none", padding: 0 }}>
                     {errors.verseErrors.map((err, idx) => (
                       <li key={`verse-${idx}`} class="list-group-item" style={{ borderBottom: "1px solid #ddd", padding: "7px 0" }}>
+                        <span
+                        style={{
+                          fontWeight: "500",
+                          fontSize: "15px",
+                          marginRight: "5px"
+                        }}
+                        
+                        >
+                          {
+                          idx + 1
+                          }.
+                        </span>
                         <span>
                           {err.chapterName} : {err.verseNumber}
                         </span>
@@ -506,6 +538,18 @@ export default defineComponent({
                           padding: "5px 0",
                         }}
                       >
+                         <span
+                        style={{
+                          fontWeight: "500",
+                          fontSize: "15px",
+                          marginRight: "5px"
+                        }}
+                        
+                        >
+                          {
+                          idx + 1
+                          }.
+                        </span>
                         <span
                           class="badge me-2"
                           style={{
@@ -523,26 +567,26 @@ export default defineComponent({
                 )}
               </div>
               <div class="mb-3">
-                <h6>Kesimpulan </h6>
-                <select class="form-select" style="max-width: 200px;" v-model={this.recapData.kesimpulan}>
-                  <option value="" style="color: grey;">Pilih Kesimpulan</option>
-                  <option value="Lancar">Lancar</option>
-                  <option value="Tidak Lancar">Tidak Lancar</option>
-                  <option value="Lulus">Lulus</option>
-                  <option value="Tidak Lulus">Tidak Lulus</option>
-                  <option value="Mumtaz">Mumtaz</option>
-                  <option value="Dhoif">Dhoif</option>
-                </select>
-              </div>
-              <div class="mb-3">
-               <h6>Catatan</h6>
-                <textarea
-                  class="form-control"
-                  v-model={this.recapData.catatan}
-                  placeholder="Catatan"
-                ></textarea>
-              </div>
-            </div>
+                  <h6>Kesimpulan</h6>
+                  <select class="form-select" style="max-width: 200px;" v-model={this.pageConclusions[page]}>
+                    <option value="" style="color: grey;">Pilih Kesimpulan</option>
+                    <option value="Lancar">Lancar</option>
+                    <option value="Tidak Lancar">Tidak Lancar</option>
+                    <option value="Lulus">Lulus</option>
+                    <option value="Tidak Lulus">Tidak Lulus</option>
+                    <option value="Mumtaz">Mumtaz</option>
+                    <option value="Dhoif">Dhoif</option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <h6>Catatan</h6>
+                  <textarea
+                    class="form-control"
+                    v-model={this.pageNotes[page]}
+                    placeholder="Catatan khusus halaman ini"
+                  ></textarea>
+                </div>
+              </div>  
           ))
         }
       </div>

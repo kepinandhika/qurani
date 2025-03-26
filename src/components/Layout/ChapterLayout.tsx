@@ -97,16 +97,30 @@ export default defineComponent({
     // Misalnya, untuk surah "Attur" range halamannya adalah 523 sampai 525.
     // Jika surah lain, kita bisa mengembalikan range default hanya satu halaman (props.page).
     const pageRange = computed<number[]>(() => {
-      if (props.chapter.name_simple === "Attur") {
-        return [523, 524, 525];
+  // Untuk chapter "Attur", range sudah ditentukan
+  if (props.chapter.name_simple === "Attur") {
+    return [523, 524, 525];
+  }
+  // Jika ada data range halaman di objek chapter
+  if (props.chapter.pages && Array.isArray(props.chapter.pages)) {
+    // Jika chapter.pages hanya memiliki dua angka (misal: [440, 445]),
+    // maka buat array dari angka pertama sampai angka kedua
+    if (props.chapter.pages.length === 2) {
+      const start = props.chapter.pages[0];
+      const end = props.chapter.pages[1];
+      const fullRange: number[] = [];
+      for (let i = start; i <= end; i++) {
+        fullRange.push(i);
       }
-      // Jika ada data range halaman di objek chapter, gunakan itu (misalnya chapter.pages)
-      if (props.chapter.pages && Array.isArray(props.chapter.pages)) {
-        return props.chapter.pages;
-      }
-      // Fallback: hanya satu halaman (nilai props.page)
-      return [props.page];
-    });
+      return fullRange;
+    }
+    // Jika chapter.pages sudah merupakan array lengkap, kembalikan langsung
+    return props.chapter.pages;
+  }
+  // Fallback: jika tidak ada data halaman, gunakan props.page
+  return [props.page];
+});
+
     // Simpan range halaman, halaman awal, dan halaman akhir ke localStorage
     onMounted(() => {
       const pages = pageRange.value;

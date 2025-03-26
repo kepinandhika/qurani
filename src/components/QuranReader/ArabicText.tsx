@@ -209,29 +209,30 @@ export default defineComponent({
 
     // Fungsi untuk menandai kesalahan
     // Pastikan hanya instance kata yang dipilih (berdasarkan id) yang ditandai
-    function markError(word: Words | null, Kesalahan: string, isVerseError: boolean = false) {
-      // Tentukan nomor halaman
-      let pageNumber: number | undefined;
-      if (word) {
-        pageNumber = word.page_number;
-      } else if (props.words.length > 0) {
-        // Untuk kesalahan ayat, gunakan halaman dari kata pertama di ayat
-        pageNumber = props.words[0].page_number;
-      }
-    
-      if (word || isVerseError) {
-        markedErrors.value.push({
-          word,
-          Kesalahan,
-          verseNumber: props.verseNumber!,
-          chapterName: chapter.value?.name_simple || '',
-          isVerseError,
-          page: pageNumber,
-        });
-        saveMarkedErrors();
-        closeModal();
-      }
-    }
+   function markError(word: Words | null, Kesalahan: string, isVerseError: boolean = false) {
+  let pageNumber: number | undefined;
+  if (word) {
+    // Untuk kesalahan pada kata, gunakan page_number dari objek word
+    pageNumber = word.page_number;
+  } else if (isVerseError) {
+    // Untuk kesalahan ayat, ambil page_number dari kata pertama di ayat tersebut
+    pageNumber = props.words.length > 0 ? props.words[0].page_number : 0;
+  }
+
+  if (word || isVerseError) {
+    markedErrors.value.push({
+      word,
+      Kesalahan,
+      verseNumber: props.verseNumber!,
+      chapterName: chapter.value?.name_simple || '',
+      isVerseError,
+      page: pageNumber,
+    });
+    saveMarkedErrors();
+    closeModal();
+  }
+}
+
 
     // Fungsi untuk menghapus tanda kesalahan
     // Untuk kata, hapus hanya jika id kata sama
