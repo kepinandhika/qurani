@@ -458,9 +458,9 @@ export default defineComponent({
           .map(([page, errors]) => (
             <div key={page} class="card p-4 shadow-sm mb-3">
               <div class="card shadow-sm mb-4" style={{
-                border: "none",
-                borderRadius: "12px",
-                overflow: "hidden"
+                // border: "none",
+                // borderRadius: "12px",
+                // overflow: "hidden"
               }}>
                 <div class="card-header p-3 text-center" style={{
                   background: "linear-gradient(135deg,rgb(162, 240, 223), rgb(40, 167, 161))",
@@ -578,14 +578,14 @@ export default defineComponent({
                     <option value="Dhoif">Dhoif</option>
                   </select>
                 </div>
-                <div class="mb-3">
+                {/* <div class="mb-3">
                   <h6>Catatan</h6>
                   <textarea
                     class="form-control"
                     v-model={this.pageNotes[page]}
                     placeholder="Catatan khusus halaman ini"
                   ></textarea>
-                </div>
+                </div> */}
               </div>  
           ))
         }
