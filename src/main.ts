@@ -10,6 +10,7 @@ import directives from "./plugins/directives.tsx"
 import Vue3Toastify from "vue3-toastify";
 import i18n from "./i18n/index.ts";
 import routes from "./routes/index.ts";
+
 // css
 import "./assets/scss/quran.scss?ver=1.0.1";
 

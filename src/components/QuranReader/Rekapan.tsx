@@ -5,6 +5,7 @@ import vSelect from "vue-select";
 import "vue-select/dist/vue-select.css";
 import toast from "@/lib/toast";
 import { useRoute } from "vue-router";
+import "./index.css"
 
 interface MarkedError {
   word: any;
@@ -85,6 +86,8 @@ export default defineComponent({
       }
     });
 
+    
+
     // Watcher untuk mengupdate awal halaman saat surah awal berubah
     watch(selectedStartSurah, (newVal) => {
       const chapter = chapters.data.value.find(ch => ch.name_simple === newVal);
@@ -161,6 +164,7 @@ export default defineComponent({
       });
       return errorsByType;
     });
+    
 
     const getErrorColor = (error: string): string => {
       const colorMap: Record<string, string> = {
@@ -191,7 +195,7 @@ export default defineComponent({
         toast.error("Pilih Kesimpulan");
         return; // Berhenti jika kesimpulan belum diisi
       }
-      
+
       // if (!recapData.catatan) {
       //   toast.error("Perlu menambah catatan terlebih dahulu");
       //   return; // Berhenti jika catatan belum diisi
@@ -241,43 +245,43 @@ export default defineComponent({
       return chapters.data.value.map((ch: any) => ch.name_simple);
     });
 
-      // Mengelompokkan kesalahan berdasarkan nomor halaman
-      const errorsByPage = computed(() => {
-        const pages: Record<number, { verseErrors: MarkedError[], wordErrors: MarkedError[] }> = {};
-        const startPage = parseInt(recapData.awalHalaman) || 1;
-        const endPage = parseInt(recapData.akhirHalaman) || 1;
-        
-        // Inisialisasi untuk setiap halaman dalam rentang
-        for (let page = startPage; page <= endPage; page++) {
-          pages[page] = { verseErrors: [], wordErrors: [] };
-        }
-        
-        markedErrors.value.forEach(err => {
-          // Jika err memiliki properti page, gunakan itu; jika tidak, hitung dengan getVersePage
-          const page = err.page || (err.word?.page_number ? err.word.page_number : getVersePage(err.chapterName, err.verseNumber));
-          if (page >= startPage && page <= endPage) {
-            if (err.isVerseError) {
-              pages[page].verseErrors.push(err);
-            } else {
-              pages[page].wordErrors.push(err);
-            }
+    // Mengelompokkan kesalahan berdasarkan nomor halaman
+    const errorsByPage = computed(() => {
+      const pages: Record<number, { verseErrors: MarkedError[], wordErrors: MarkedError[] }> = {};
+      const startPage = parseInt(recapData.awalHalaman) || 1;
+      const endPage = parseInt(recapData.akhirHalaman) || 1;
+
+      // Inisialisasi untuk setiap halaman dalam rentang
+      for (let page = startPage; page <= endPage; page++) {
+        pages[page] = { verseErrors: [], wordErrors: [] };
+      }
+
+      markedErrors.value.forEach(err => {
+        // Jika err memiliki properti page, gunakan itu; jika tidak, hitung dengan getVersePage
+        const page = err.page || (err.word?.page_number ? err.word.page_number : getVersePage(err.chapterName, err.verseNumber));
+        if (page >= startPage && page <= endPage) {
+          if (err.isVerseError) {
+            pages[page].verseErrors.push(err);
+          } else {
+            pages[page].wordErrors.push(err);
           }
-        });
-        
-        return pages;
+        }
       });
-    
-    
-      // Fungsi untuk menghitung halaman ayat bila data tidak tersedia di word
-      const getVersePage = (chapterName: string, verseNumber: number): number => {
-        const chapter = chapters.data.value.find(ch => ch.name_simple === chapterName);
-        if (!chapter || !chapter.pages || chapter.pages.length === 0) return 0;
-        const totalVerses = chapter.verses_count;
-        const totalPages = chapter.pages.length;
-        const pageIndex = Math.floor(((verseNumber - 1) / totalVerses) * totalPages);
-        return chapter.pages[Math.min(pageIndex, totalPages - 1)];
-      };
-    
+
+      return pages;
+    });
+
+
+    // Fungsi untuk menghitung halaman ayat bila data tidak tersedia di word
+    const getVersePage = (chapterName: string, verseNumber: number): number => {
+      const chapter = chapters.data.value.find(ch => ch.name_simple === chapterName);
+      if (!chapter || !chapter.pages || chapter.pages.length === 0) return 0;
+      const totalVerses = chapter.verses_count;
+      const totalPages = chapter.pages.length;
+      const pageIndex = Math.floor(((verseNumber - 1) / totalVerses) * totalPages);
+      return chapter.pages[Math.min(pageIndex, totalPages - 1)];
+    };
+
     // const getVersePage = (chapterName: string, verseNumber: number): number => {
     //   const chapter = chapters.data.value.find(ch => ch.name_simple === chapterName);
     //   if (!chapter || !chapter.pages || chapter.pages.length === 0) return 0;
@@ -288,8 +292,41 @@ export default defineComponent({
     // };
     const pageConclusions = reactive<Record<string, string>>({});
     const pageNotes = reactive<Record<string, string>>({});
+    const panels = ref<Record<string, boolean>>({});
 
-    // Inisialisasi nilai default jika perlu
+    // Fungsi untuk menyimpan data ke local storage
+    const saveToLocalStorage = () => {
+      localStorage.setItem('pageConclusions', JSON.stringify(pageConclusions));
+      localStorage.setItem('pageNotes', JSON.stringify(pageNotes));
+      localStorage.setItem('panels', JSON.stringify(panels.value));
+    };
+
+    // Fungsi untuk memuat data dari local storage
+    const loadFromLocalStorage = () => {
+      const savedConclusions = localStorage.getItem('pageConclusions');
+      const savedNotes = localStorage.getItem('pageNotes');
+      const savedPanels = localStorage.getItem('panels');
+
+      if (savedConclusions) {
+        Object.assign(pageConclusions, JSON.parse(savedConclusions));
+      }
+      if (savedNotes) {
+        Object.assign(pageNotes, JSON.parse(savedNotes));
+      }
+      if (savedPanels) {
+        panels.value = JSON.parse(savedPanels);
+      }
+    };
+
+    // Memuat data saat komponen dimount
+    onMounted(loadFromLocalStorage);
+
+    // Menyimpan data saat ada perubahan
+    watch(pageConclusions, saveToLocalStorage, { deep: true });
+    watch(pageNotes, saveToLocalStorage, { deep: true });
+    watch(panels, saveToLocalStorage, { deep: true });
+
+    // Inisialisasi nilai default jika perlu (kode Anda yang sudah ada)
     watch(() => recapData.awalHalaman, (newVal, oldVal) => {
       const start = parseInt(newVal) || 1;
       const end = parseInt(recapData.akhirHalaman) || 1;
@@ -307,6 +344,23 @@ export default defineComponent({
         if (!pageNotes[page]) pageNotes[page] = "";
       }
     }, { immediate: true });
+
+    const togglePanel = (page: string) => {
+      panels.value[page] = !panels.value[page];
+    };
+        // Inisialisasi default state panel berdasarkan errorsByPage
+        watch(errorsByPage, (newVal) => {
+          Object.keys(newVal).forEach((page) => {
+            if (panels.value[page] === undefined) {
+              panels.value[page] = true;
+            }
+          });
+        }, { immediate: true });
+
+
+
+
+    
 
     return {
       recapData,
@@ -330,7 +384,9 @@ export default defineComponent({
       getVersePage,
       errorsByPage,
       pageConclusions,
-      pageNotes 
+      pageNotes,
+      panels,
+      togglePanel
     };
   },
   render() {
@@ -454,141 +510,146 @@ export default defineComponent({
 
         {/* Kesalahan  */}
         {Object.entries(this.errorsByPage)
-          .sort(([pageA], [pageB]) => parseInt(pageA) - parseInt(pageB))
-          .map(([page, errors]) => (
-            <div key={page} class="card p-4 shadow-sm mb-3">
-              <div class="card shadow-sm mb-4" style={{
-                // border: "none",
-                // borderRadius: "12px",
-                // overflow: "hidden"
-              }}>
-                <div class="card-header p-3 text-center" style={{
-                  background: "linear-gradient(135deg,rgb(162, 240, 223), rgb(40, 167, 161))",
-                  border: "none",
-                  color: "#2C3E50",
-                  fontSize: "1.2rem",
-                  fontWeight: "600",
-                  textShadow: "0 1px 2px rgba(255,255,255,0.3)",
-                  boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
-                }}>
-                  <div class="d-flex justify-content-start align-items-start">
-                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                    <span>Halaman {page}</span>
-                  </div>
-                </div>
-              </div>
+  .sort(([pageA], [pageB]) => parseInt(pageA) - parseInt(pageB))
+  .map(([page, errors]) => (
+    <div key={page} class="panel card mb-3">
+      <div 
+        class=" panel-heading d-flex align-items-center justify-content-between" 
+        style={{
+          background: "#d9edf7",
+          border: "none",
+          color: "#2C3E50",
+          cursor: "pointer"
+        }}
+        onClick={() => this.togglePanel(page)}
+      >
+        <h5 class="m-0"
+        style={{
 
+          color: "#31708f",
+        }}
+        
+        >Halaman {page}</h5>
+        {/* Ikon SVG baru di pojok kanan */}
+        <span>
+        <svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="34px"
+  height="34px"
+  viewBox="0 0 24 24"
+  style={{ 
+    transform: this.panels[page] ? "rotate(180deg)" : "rotate(0deg)", 
+    transition: "transform 0.3s", 
+    marginTop: "20px", 
+    color: "#31708f" 
+  }}
+>
+  <g>
+    <path fill="none" d="M0 0h24v24H0z" />
+    <path fill="currentColor" d="M12 15l-4.243-4.243 1.415-1.414L12 12.172l2.828-2.829 1.415 1.414z"/>
+  </g>
+</svg>
+ 
+        </span>
+      </div>
 
-              {/* Kesalahan Ayat untuk halaman ini */}
-              <div class="mb-3">
-                <h6>Kesalahan Ayat:</h6>
-                {errors.verseErrors.length === 0 ? (
-                  <p class="text-muted"> Tidak ada kesalahan ayat.</p>
-                ) : (
-                  <ul style={{ textAlign: "left", listStyleType: "none", padding: 0 }}>
-                    {errors.verseErrors.map((err, idx) => (
-                      <li key={`verse-${idx}`} class="list-group-item" style={{ borderBottom: "1px solid #ddd", padding: "7px 0" }}>
-                        <span
-                        style={{
-                          fontWeight: "500",
-                          fontSize: "15px",
-                          marginRight: "5px"
-                        }}
-                        
-                        >
-                          {
-                          idx + 1
-                          }.
-                        </span>
-                        <span>
-                          {err.chapterName} : {err.verseNumber}
-                        </span>
-                        <span
-                          class="badge ms-2"
-                          style={{
-                            backgroundColor: this.getErrorColor(err.Kesalahan),
-                            borderWidth: "2px",
-                            fontWeight: "500",
-                            textAlign: "left",
-                            color: "#000000",
-                            fontSize: "15px"
-                          }}
-                        >
-                          {err.Kesalahan}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
+      <div class="panel-body" v-show={this.panels[page]}>
+        {/* Kesalahan Ayat */}
+        <div class="mb-3">
+          <h6>Kesalahan Ayat:</h6>
+          {errors.verseErrors.length === 0 ? (
+            <p class="text-muted">Tidak ada kesalahan ayat.</p>
+          ) : (
+            <ul style={{ textAlign: "left", listStyleType: "none", padding: 0 }}>
+              {errors.verseErrors.map((err, idx) => (
+                <li key={`verse-${idx}`} class="list-group-item" style={{ borderBottom: "1px solid #ddd", padding: "7px 0" }}>
+                  <span style={{ fontWeight: "500", fontSize: "15px", marginRight: "5px" }}>
+                    {idx + 1}.
+                  </span>
+                  <span>
+                    {err.chapterName} : {err.verseNumber}
+                  </span>
+                  <span
+                    class="badge ms-2"
+                    style={{
+                      backgroundColor: this.getErrorColor(err.Kesalahan),
+                      borderWidth: "2px",
+                      fontWeight: "500",
+                      textAlign: "left",
+                      color: "#000000",
+                      fontSize: "15px"
+                    }}
+                  >
+                    {err.Kesalahan}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
 
-              {/* Kesalahan Kata untuk halaman ini */}
-              <div>
-                <h6>Kesalahan Kata:</h6>
-                {errors.wordErrors.length === 0 ? (
-                  <p class="text-muted">Tidak ada kesalahan kata.</p>
-                ) : (
-                  <ul style={{ textAlign: "left", listStyleType: "none", padding: 0 }}>
-                    {errors.wordErrors.map((err, idx) => (
-                      <li
-                        key={`word-${idx}`}
-                        class="list-group-item"
-                        style={{
-                          borderBottom: "1px solid #ddd",
-                          padding: "5px 0",
-                        }}
-                      >
-                         <span
-                        style={{
-                          fontWeight: "500",
-                          fontSize: "15px",
-                          marginRight: "5px"
-                        }}
-                        
-                        >
-                          {
-                          idx + 1
-                          }.
-                        </span>
-                        <span
-                          class="badge me-2"
-                          style={{
-                            backgroundColor: this.getErrorColor(err.Kesalahan),
-                            color: "#000000",
-                            fontSize: "20px",
-                          }}
-                        >
-                          {err.word.text_uthmani}
-                        </span>
-                        <span> : {err.Kesalahan}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-              <div class="mb-3">
-                  <h6>Kesimpulan</h6>
-                  <select class="form-select" style="max-width: 200px;" v-model={this.pageConclusions[page]}>
-                    <option value="" style="color: grey;">Pilih Kesimpulan</option>
-                    <option value="Lancar">Lancar</option>
-                    <option value="Tidak Lancar">Tidak Lancar</option>
-                    <option value="Lulus">Lulus</option>
-                    <option value="Tidak Lulus">Tidak Lulus</option>
-                    <option value="Mumtaz">Mumtaz</option>
-                    <option value="Dhoif">Dhoif</option>
-                  </select>
-                </div>
-                {/* <div class="mb-3">
-                  <h6>Catatan</h6>
-                  <textarea
-                    class="form-control"
-                    v-model={this.pageNotes[page]}
-                    placeholder="Catatan khusus halaman ini"
-                  ></textarea>
-                </div> */}
-              </div>  
-          ))
-        }
+        {/* Kesalahan Kata */}
+        <div class="mb-3">
+          <h6>Kesalahan Kata:</h6>
+          {errors.wordErrors.length === 0 ? (
+            <p class="text-muted">Tidak ada kesalahan kata.</p>
+          ) : (
+            <ul style={{ textAlign: "left", listStyleType: "none", padding: 0 }}>
+              {errors.wordErrors.map((err, idx) => (
+                <li
+                  key={`word-${idx}`}
+                  class="list-group-item"
+                  style={{
+                    borderBottom: "1px solid #ddd",
+                    padding: "5px 0",
+                  }}
+                >
+                  <span style={{ fontWeight: "500", fontSize: "15px", marginRight: "5px" }}>
+                    {idx + 1}.
+                  </span>
+                  <span
+                    class="badge me-2"
+                    style={{
+                      backgroundColor: this.getErrorColor(err.Kesalahan),
+                      color: "#000000",
+                      fontSize: "20px",
+                    }}
+                  >
+                    {err.word.text_uthmani}
+                  </span>
+                  <span>{err.Kesalahan}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+        
+        {/* Form Kesimpulan dan Catatan */}
+        <div class="mb-3">
+          <h6>Kesimpulan</h6>
+          <select class="form-select" style="max-width: 200px;" v-model={this.pageConclusions[page]}>
+            <option value="" style="color: grey;">Pilih Kesimpulan</option>
+            <option value="Lancar">Lancar</option>
+            <option value="Tidak Lancar">Tidak Lancar</option>
+            <option value="Lulus">Lulus</option>
+            <option value="Tidak Lulus">Tidak Lulus</option>
+            <option value="Mumtaz">Mumtaz</option>
+            <option value="Dhoif">Dhoif</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <h6>Catatan</h6>
+          <textarea
+            class="form-control"
+            v-model={this.pageNotes[page]}
+            placeholder="Catatan khusus halaman ini"
+          ></textarea>
+        </div>
+      </div>
+    </div>
+  ))
+}
+
       </div>
     );
   },
