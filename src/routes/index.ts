@@ -74,6 +74,14 @@ const routes: RouteRecordRaw[] = [
 		},
 	},
 	{
+		path: "/Page",
+		name: "Page",
+		component: () => import("@/components/QuranReader/Page"),
+		meta: {
+			title: "Page",
+		},
+	},
+	{
 		path: "/HasilRekapan",
 		name: "HasilRekapan",
 		component: () => import("@/components/QuranReader/HasilRekapan"),

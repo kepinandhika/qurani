@@ -23,7 +23,7 @@ export const useQuranReader = createGlobalState<() => UseQuranReader>((): UseQur
             return storage.set("QURAN_READER:TRANSLATE_MODE", value);
         },
         get() {
-            return storage.get("QURAN_READER:TRANSLATE_MODE", "translated");
+            return storage.get("QURAN_READER:TRANSLATE_MODE", "read");
         }
     });
 

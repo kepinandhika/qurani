@@ -112,24 +112,35 @@ export default defineComponent({
         //     }
         // }
         function nextChapter() {
-            if (meta.value.hasNextChapter) {
-                router.push({ 
-                    name: "juz", 
-                    params: { id: props.chapter[props.chapter.length - 1].id + 1 } 
-                }).then(() => {
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 500); 
-                });
-            }
+            // if (meta.value.hasNextChapter) {
+            //     router.push({ name: "juz", params: { id: props.chapter[props.chapter.length - 1].id + 1 } });
+            // }
+            if (props.juzNumber >= 30) return;
+            const newJuz = props.juzNumber + 1;
+            router.push({
+              name: "juz",
+              params: { id: newJuz }
+            }).then(() => {
+              // Lakukan refresh halaman setelah navigasi
+              window.location.reload();
+            });
         }
-
 
         function prevChapter() {
-            if (meta.value.hasPrevChapter) {
-                router.push({ name: "juz", params: { id: props.chapter[0].id - 1 } });
-            }
+            // if (meta.value.hasPrevChapter) {
+            //     router.push({ name: "juz", params: { id: props.chapter[0].id - 1 } });
+            // }
+            if (props.juzNumber <= 1) return;
+            const newJuz = props.juzNumber - 1;
+            router.push({
+              name: "juz",
+              params: { id: newJuz }
+            }).then(() => {
+              // Lakukan refresh halaman setelah navigasi
+              window.location.reload();
+            });
         }
+
 
         function loadMore(delay: number = 200): Promise<boolean> {
             return new Promise(resolve => {
