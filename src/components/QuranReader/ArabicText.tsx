@@ -297,6 +297,7 @@ export default defineComponent({
             {{
               title: () => (
                 <div class="text-center">
+                  
                   {t("quran-reader.word-number", { ayah: props.verseNumber })}
                 </div>
               ),

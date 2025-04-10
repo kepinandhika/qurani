@@ -155,7 +155,7 @@ export default defineComponent({
                                 activeAyah={this.activeAyah}
                                 onClickAyah={this.handleClickAyah}
                                 classNav={index === 0 ? "" : "d-none"}
-                                classFooter={index === juz.chapters.length - 1 ? "" : "d-none"}
+                                // classFooter={index === juz.chapters.length - 1 ? "" : "d-none"}
                             >
                                 <div ref="root">
                                     <Suspense key={this.keys}>

@@ -27,10 +27,11 @@ export default defineComponent({
        
 
         {this.chapter.bismillah_pre && (
-          <div class="container-fluid d-flex justify-content-center mb-3">
+          <div class="container-fluid d-flex justify-content-center mb-3"
+           style={{ width: "80%", height: "auto" }}>
             <img
               class="img-fluid bismillah-img"
-              src="/assets/svg/bismillah.svg"
+              src="/assets/img/bismillah.png"
               alt="Banner"
             />
           </div>

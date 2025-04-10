@@ -143,143 +143,119 @@ export default defineComponent({
       translateMode
     };
   },
-  render() {
-    return (
-      <MainLayout 
-        showScrollIndicator 
-        fixed 
-        class={this.class}
-        showNavbar={!this.classNav.includes('d-none')}
-        showFooter={!this.classFooter.includes('d-none')}
-      >
-        {{
-          navSection: () => (
-            <div class="ps-2 pe-2">
-              <div class="d-flex justify-content-between align-items-center mt-3 mb-3">
-                <div class="d-flex align-items-center">
-                  <router-link to="/">
-                    <font-awesome-icon icon="home" style={{ fontSize: "18px" }} />
-                  </router-link>
-                  <span class="ms-1">
-                    / {this.$t("quran-reader.nav-header", { page: this.page })}
-                  </span>
+ // Bagian render yang sudah dimodifikasi
+render() {
+  return (
+    <MainLayout 
+      showScrollIndicator 
+      fixed 
+      class={this.class}
+      showNavbar={!this.classNav.includes('d-none')}
+      showFooter={!this.classFooter.includes('d-none')}
+    >
+      {{
+        navSection: () => (
+          <div class="ps-2 pe-2">
+            <div class="d-flex justify-content-between align-items-center mt-3 mb-3">
+              <div class="d-flex align-items-center">
+                <router-link to="/">
+                  <font-awesome-icon icon="home" style={{ fontSize: "18px" }} />
+                </router-link>
+                <span class="ms-1">
+                  / {this.$t("quran-reader.nav-header", { page: this.page })}
+                </span>
+              </div>
+              {this.translateMode === "read" && (
+                <div 
+                  class="d-flex justify-content-center align-items-center cursor-pointer w-[5%] text-center p-[5px]"
+                  onClick={this.handleClick}
+                >
+                 <span class="text-white fw-bold px-3 py-1 rounded" style="background-color: #ff6500;">
+  SELESAI
+</span>
+
                 </div>
-                {this.translateMode === "read" && (
-                  <div 
-                    class="d-flex justify-content-center align-items-center cursor-pointer w-[5%] text-center p-[5px]"
-                    onClick={this.handleClick}
-                  >
-                    <span class="text-white fw-bold bg-primary px-3 py-1 rounded">
-                      SELESAI
-                    </span>
-                  </div>
-                )}
-                <div class="cursor-pointer d-flex align-items-center" onClick={() => this.toggle()}>
-                  <span>{this.chapter.name_simple}</span>
-                  <font-awesome-icon icon={this.show ? "caret-up" : "caret-down"} class="ms-2" />
-                </div>
+              )}
+              <div class="cursor-pointer d-flex align-items-center" onClick={() => this.toggle()}>
+                <span>{this.chapter.name_simple}</span>
+                <font-awesome-icon icon={this.show ? "caret-up" : "caret-down"} class="ms-2" />
               </div>
             </div>
-          ),
-          footer: () => (
-            <Transition
-              enterActiveClass={styles.animate_in}
-              leaveActiveClass={styles.animate_out}
-              onBeforeLeave={(el) => {
-                el.classList.remove(styles.active);
-              }}
-              onAfterEnter={(el) => {
-                el.classList.add(styles.active);
-              }}
-            >
-              {this.show && (
-                <div ref="root" class={styles.container} onClick={(e: Event) => {
-                  if ((e.target as HTMLElement).classList.contains(styles.card_container)) {
-                    this.show = false;
-                  }
-                }}>
-                  <div class={styles.card_container}>
-                    <div class={["card", styles.card]}>
-                      <div class={["card-header d-flex justify-content-between", styles.card_header]}>
-                        <h4 class="card-title">{this.chapter.name_simple}</h4>
-                        <div class="h-100 d-flex align-items-center">
-                          <button class="btn-close" onClick={() => this.show = false}></button>
-                        </div>
+          </div>
+        ),
+        footer: () => (
+          <Transition
+            enterActiveClass={styles.animate_in}
+            leaveActiveClass={styles.animate_out}
+            onBeforeLeave={(el) => {
+              el.classList.remove(styles.active);
+            }}
+            onAfterEnter={(el) => {
+              el.classList.add(styles.active);
+            }}
+          >
+            {this.show && (
+              <div ref="root" class={styles.container} onClick={(e: Event) => {
+                if ((e.target as HTMLElement).classList.contains(styles.card_container)) {
+                  this.show = false;
+                }
+              }}>
+                <div class={styles.card_container}>
+                  <div class={["card", styles.card]}>
+                    <div class={["card-header d-flex justify-content-between", styles.card_header]}>
+                      <h4 class="card-title">{this.chapter.name_simple}</h4>
+                      <div class="h-100 d-flex align-items-center">
+                        <button class="btn-close" onClick={() => this.show = false} aria-label="Close"></button>
                       </div>
-                      <div class="card-body">
-                        <div class="row border-top">
-                          <div class="col-8 border-end">
-                            <div class="mb-4 mt-3">
-                              <Input
-                                class="text-center"
-                                v-model={this.search.chapter}
-                                {...{ placeholder: this.$t("general.search-surah") }}
-                              />
-                            </div>
-                            <div class={["hide-scrollbar", styles.list_items]} data-name="chapter">
-                              {this.filteredChapters.length > 0 ? (
-                                <div class="list-group">
-                                  {this.filteredChapters.map(chapter => (
-                                    <div
-                                      key={chapter.id}
-                                      data-chapter-id={chapter.id}
-                                      class={["list-group-item list-group-item-action border-0", styles.item, { active: (this.$route.params.id as unknown) == chapter.id }]}
-                                      onClick={() => {
-                                        this.$router.push({ name: "chapter", params: { id: chapter.id } });
-                                      }}
-                                    >
-                                      <span class={"me-1 fw-bold"}>{chapter.id}</span>
-                                      <span class="ms-1">{chapter.name_simple}</span>
-                                    </div>
-                                  ))}
-                                </div>
-                              ) : (
-                                <p class="font-monospace text-center">
-                                  {this.$t("general.no-surah-to-display")}
-                                </p>
-                              )}
-                            </div>
+                    </div>
+                    <div class="card-body">
+                      {/* Ubah row agar hanya ada satu kolom untuk pencarian surah */}
+                      <div class="row border-top">
+                        <div class="col-12">
+                          <div class="mb-4 mt-3">
+                            <Input
+                              class="text-center"
+                              
+                              v-model={this.search.chapter}
+                              {...{ placeholder: this.$t("general.search-surah") }}
+                            />
                           </div>
-                          <div class="col-4">
-                            <div class="mb-4 mt-3">
-                              <Input
-                                class="text-center"
-                                v-model={this.search.ayah}
-                                {...{ placeholder: this.$t("general.search-ayah"), type: "number" }}
-                              />
-                            </div>
-                            <div class={["hide-scrollbar", styles.list_items]} data-name="ayah">
-                              {this.filteredAyah.length > 0 ? (
-                                <div class="list-group">
-                                  {this.filteredAyah.map(number => (
-                                    <div
-                                      key={number}
-                                      data-ayah={number}
-                                      class={["list-group-item list-group-item-action border-0", styles.item, { active: this.activeAyah === number }]}
-                                      onClick={() => this.$emit("clickAyah", number)}
-                                    >
-                                      <div class="text-center">{number}</div>
-                                    </div>
-                                  ))}
-                                </div>
-                              ) : (
-                                <p class="font-monospace text-center">
-                                  {this.$t("general.no-ayah-to-display")}
-                                </p>
-                              )}
-                            </div>
+                          <div class={["hide-scrollbar", styles.list_items]} data-name="chapter">
+                            {this.filteredChapters.length > 0 ? (
+                              <div class="list-group">
+                                {this.filteredChapters.map(chapter => (
+                                  <div
+                                    key={chapter.id}
+                                    data-chapter-id={chapter.id}
+                                    
+                                    class={["list-group-item list-group-item-action border-0", styles.item]}
+                                    onClick={() => {
+                                      this.$router.push({ name: "chapter", params: { id: chapter.id } });
+                                    }}
+                                  >
+                                    <span class={"me-1 fw-bold"}>{chapter.id}</span>
+                                    <span class="ms-1">{chapter.name_simple}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p class="font-monospace text-center">
+                                {this.$t("general.no-surah-to-display")}
+                              </p>
+                            )}
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              )}
-            </Transition>
-          ),
-          default: this.$slots.default
-        }}
-      </MainLayout>
-    );
-  }
+              </div>
+            )}
+          </Transition>
+        ),
+        default: this.$slots.default
+      }}
+    </MainLayout>
+  );
+}
 });

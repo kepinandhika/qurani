@@ -438,9 +438,10 @@ export default defineComponent({
   render() {
     return (
       <div class="container my-4">
-        <button class="btn btn-link mb-3" style="text-decoration:none;" onClick={this.goBack}>
-          <i class="bi bi-arrow-left"></i> {this.$t("general.back")}
-        </button>
+        <button class="btn btn-link mb-3" style="text-decoration: none;" onClick={this.goBack}>
+  <img src="/assets/img/left-arrow.png" alt="Back" style="height: 24px;" />
+</button>
+
         <h2 class="mb-4 text-center">{this.$t("general.hasilrekap")}</h2>
         {this.submissionNotification && (
           <div class="alert alert-success" role="alert">
