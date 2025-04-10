@@ -24,14 +24,7 @@ export default defineComponent({
   render() {
     return (
       <>
-        <div class="row d-flex justify-content-between mb-5 mt-5">
-          <div class="col-6 col-md-4">
-            <Switcher />
-          </div>
-          <div class="col-5 col-md-2">
-            <PlayAudioButton audioId={this.chapter.id} />
-          </div>
-        </div>
+       
 
         {this.chapter.bismillah_pre && (
           <div class="container-fluid d-flex justify-content-center mb-3">

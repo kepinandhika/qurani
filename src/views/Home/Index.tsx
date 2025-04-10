@@ -157,6 +157,23 @@ export default defineComponent({
       }
     });
 
+    onMounted(() => {
+      // Hapus data-data berikut dari localStorage:
+      localStorage.removeItem("selectedJuz");
+      localStorage.removeItem("selectedSurahStart");
+      localStorage.removeItem("selectedSurahEnd");
+      localStorage.removeItem("pageRange");
+      localStorage.removeItem("startPage");
+      localStorage.removeItem("endPage");
+      localStorage.removeItem("pageConclusions");
+      localStorage.removeItem("pageNotes");
+      localStorage.removeItem("panels");
+      localStorage.removeItem("selectedMember");
+      localStorage.removeItem("selectedSurah");
+      localStorage.removeItem("markedErrors");
+    });
+    
+
     // Ambil pilihan dari localStorage saat onMounted
     onMounted(() => {
       const savedGroup = localStorage.getItem("selectedGroup");

@@ -76,42 +76,49 @@ export default defineComponent({
 
     // --- FUNCTION TO HANDLE JUZ SELECTION ---
     function handleJuzSelect(juzNumber: number) {
-  console.log(`Handling selection for Juz ${juzNumber}`);
-
-  // Temukan data juz yang dipilih dari processedJuzs
-  const selectedJuzData = processedJuzs.value.find(j => j.id === juzNumber);
-
-  if (!selectedJuzData || !selectedJuzData.chapters) {
-    console.warn(`Chapter data for Juz ${juzNumber} not found or incomplete.`);
-    toast.warn(`Surah list for Juz ${juzNumber} could not be determined.`);
-    // Tetap navigasi meskipun data tidak lengkap
-    router.push({ name: "juz", params: { id: juzNumber } });
-    return;
-  }
-
-  // Persiapkan daftar Surah (chapters) yang akan disimpan
-  const surahsToSave = selectedJuzData.chapters.map(chapter => ({
-    SurahId: chapter.id,
-    Surah: chapter.name_simple,
-    // Tambahkan detail lain jika diperlukan
-  }));
-
-  try {
-    // Menggunakan key yang konsisten (misal "selectedJuz") agar data tidak menumpuk
-    localStorage.setItem(`selectedJuz`, JSON.stringify({
-      juzNumber,
-      surah: surahsToSave,
-    }));
-    console.log(`Successfully saved Surahs for Juz ${juzNumber} to localStorage.`, surahsToSave);
-    toast.success(`Surah list for Juz ${juzNumber} saved locally.`);
-  } catch (e) {
-    console.error("Failed to save Surah list to localStorage:", e);
-    toast.error("Could not save the Surah list locally.");
-  }
-
-  // Navigasi ke halaman Juz yang dipilih setelah menyimpan data
-  router.push({ name: "juz", params: { id: juzNumber } });
-}
+      console.log(`Handling selection for Juz ${juzNumber}`);
+    
+      // Temukan data juz yang dipilih dari processedJuzs
+      const selectedJuzData = processedJuzs.value.find(j => j.id === juzNumber);
+    
+      if (!selectedJuzData || !selectedJuzData.chapters) {
+     
+        // Tetap navigasi meskipun data tidak lengkap
+        router.push({ name: "juz", params: { id: juzNumber } });
+        return;
+      }
+    
+      // Persiapkan daftar Surah (chapters) yang akan disimpan
+      const surahsToSave = selectedJuzData.chapters.map(chapter => ({
+        SurahId: chapter.id,
+        Surah: chapter.name_simple,
+        // Tambahkan detail lain jika diperlukan
+      }));
+    
+      // Ambil surah awal dan akhir dari data Juz
+      const firstSurah = selectedJuzData.chapters[0];
+      const lastSurah = selectedJuzData.chapters[selectedJuzData.chapters.length - 1];
+    
+      try {
+        // Simpan data lengkap Juz ke localStorage
+        localStorage.setItem("selectedJuz", JSON.stringify({
+          juzNumber,
+          surah: surahsToSave,
+        }));
+        // Simpan nama surah awal dan akhir secara terpisah
+        localStorage.setItem("selectedSurahStart", firstSurah.name_simple);
+        localStorage.setItem("selectedSurahEnd", lastSurah.name_simple);
+    
+       
+      } catch (e) {
+        console.error("Failed to save Surah list to localStorage:", e);
+        toast.error("Could not save the Surah list locally.");
+      }
+    
+      // Navigasi ke halaman Juz yang dipilih setelah menyimpan data
+      router.push({ name: "juz", params: { id: juzNumber } });
+    }
+    
 
     // --- END FUNCTION ---
 

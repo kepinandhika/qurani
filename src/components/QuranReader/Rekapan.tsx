@@ -44,6 +44,9 @@ export default defineComponent({
     const selectedEndSurah = ref<string>("");
 
     onMounted(() => {
+
+      
+      // Ambil data error dari localStorage jika ada
       const data = localStorage.getItem("markedErrors");
       if (data) {
         markedErrors.value = JSON.parse(data);
@@ -53,33 +56,41 @@ export default defineComponent({
       }
       // Ambil nama peserta dari localStorage
       const participantName = localStorage.getItem("participantName") || "";
-      // Jika participantName kosong, maka field peserta juga kosong
       recapData.namapeserta = participantName;
-
+    
+      // Cek apakah ada selectedSurah di localStorage
       const selectedSurahLS = localStorage.getItem("selectedSurah");
       if (selectedSurahLS) {
         recapData.surahDibaca = selectedSurahLS;
         selectedStartSurah.value = selectedSurahLS;
         selectedEndSurah.value = selectedSurahLS;
-      } else if (markedErrors.value.length > 0) {
-        recapData.surahDibaca = markedErrors.value[0].chapterName;
-        selectedStartSurah.value = markedErrors.value[0].chapterName;
-        selectedEndSurah.value = markedErrors.value[0].chapterName;
-      } else if (chapters.data.value.length > 0) {
-        selectedStartSurah.value = chapters.data.value[0].name_simple;
-        selectedEndSurah.value = chapters.data.value[0].name_simple;
+      } else {
+        // Jika selectedSurah tidak ada, periksa selectedSurahStart dan selectedSurahEnd
+        const selectedSurahStartLS = localStorage.getItem("selectedSurahStart");
+        const selectedSurahEndLS = localStorage.getItem("selectedSurahEnd");
+        if (selectedSurahStartLS && selectedSurahEndLS) {
+          // Isi nilai dari selectedSurahStart dan selectedSurahEnd
+          selectedStartSurah.value = selectedSurahStartLS;
+          selectedEndSurah.value = selectedSurahEndLS;
+          // Misalnya, set recapData.surahDibaca dengan surah awal
+          recapData.surahDibaca = selectedSurahStartLS;
+        } else if (markedErrors.value.length > 0) {
+          recapData.surahDibaca = markedErrors.value[0].chapterName;
+          selectedStartSurah.value = markedErrors.value[0].chapterName;
+          selectedEndSurah.value = markedErrors.value[0].chapterName;
+        } else if (chapters.data.value.length > 0) {
+          selectedStartSurah.value = chapters.data.value[0].name_simple;
+          selectedEndSurah.value = chapters.data.value[0].name_simple;
+        }
       }
-
-      // Mengambil data dari localStorage untuk recapData
-
-      // Jika di localStorage sudah ada nilai halaman (misalnya dari Chapter sebelumnya)
+    
+      // Mengambil data halaman (startPage & endPage) dari localStorage atau query
       const startPage = localStorage.getItem("startPage");
       const endPage = localStorage.getItem("endPage");
       if (startPage && endPage) {
         recapData.awalHalaman = startPage;
         recapData.akhirHalaman = endPage;
       } else {
-        // Fallback jika tidak ada, gunakan query (atau kosong)
         const pageQuery = route.query.page as string;
         if (pageQuery) {
           recapData.awalHalaman = pageQuery;
@@ -87,7 +98,7 @@ export default defineComponent({
         }
       }
     });
-
+    
 
 
     // Watcher untuk mengupdate awal halaman saat surah awal berubah

@@ -292,7 +292,7 @@ export default defineComponent({
             placement="top"
             options={{ html: true, trigger: "manual", content: () => refs.value.popoverContent! }}
             onInit={onInitPopover(word.position)}
-            v-clickHold:$300_vibrate={onClickHold(word.position)}
+            
           >
             {{
               title: () => (
@@ -528,7 +528,7 @@ export default defineComponent({
           onMouseover={() => this.isHover = true}
           onMouseleave={() => this.isHover = false}
         >
-          {this.shouldUseButton && (
+          {/* {this.shouldUseButton && (
             <div class="d-none">
               <div ref={(ref) => this.refs.popoverContent = (ref as HTMLElement)} class="d-flex">
                 {this.buttons.includes("Bookmark") && this.chapter !== null && (
@@ -548,7 +548,7 @@ export default defineComponent({
                 )}
               </div>
             </div>
-          )}
+          )} */}
           {this.words.map(word => this.wordWrapper(word, (
             <Tooltip
               key={`tooltip-${word.id}`}

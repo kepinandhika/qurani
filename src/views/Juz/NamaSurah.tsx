@@ -29,28 +29,16 @@ export default defineComponent({
 
     return (
       <>
-        <div class="row d-flex justify-content-between mb-5 mt-5">
-          <div class="col-6 col-md-4">
-            <nav class="nav nav-pills custom-nav-pills">
-              <div class={["nav-link", { active: this.translateMode == "translated" }]} onClick={() => this.translateMode = "translated"}>
-                {this.$t("quran-reader.translated")}
-              </div>
-              <div class={["nav-link", { active: this.translateMode == "read" }]} onClick={() => this.translateMode = "read"}>
-                {this.$t("quran-reader.read")}
-              </div>
-            </nav>
-          </div>
-          <div class="col-5 col-md-2">
-            <PlayAudioButton audioId={this.chapter.id} />
-          </div>
-        </div>
+        
 
         {this.chapter.bismillah_pre && (
-          <div class="container-fluid d-flex justify-content-center mb-3">
+          <div class="container-fluid d-flex justify-content-center mb-4" 
+          style={{ width: "80%", height: "auto" }}>
             <img
               class="img-fluid bismillah-img"
-              src="/assets/svg/bismillah.svg"
+              src="/assets/img/bismillah.png"
               alt="Banner"
+              
             />
           </div>
         )}
