@@ -1,4 +1,4 @@
-import { computed, defineComponent, Transition, watch, ref } from "vue";
+import { computed, defineComponent, Transition, watch, ref, onMounted } from "vue";
 import { LocaleCode } from "@/types";
 import styles from "./Setting.module.scss";
 import scroll from "@/helpers/scroll";
@@ -8,6 +8,7 @@ import UsePwa, { DefaultSlotProps } from "../PWA/UsePwa";
 import Range from "../Input/Range";
 import { useEventListener } from "@vueuse/core";
 import { FontType } from "@/hooks/settings";
+
 
 export default defineComponent({
     emits: {
@@ -22,12 +23,21 @@ export default defineComponent({
         const scaleFitures = ref<boolean>(isSupportScale());
         const shouldShow = computed<boolean>({
             set(value) {
-                emit("update:show", value)
+                emit("update:show", value);
             },
             get() {
                 return Boolean(props.show);
             }
         });
+
+        const checkedErrors = ref<Record<string, boolean>>({});
+
+onMounted(() => {
+    Object.keys(errorColors).forEach(label => {
+        checkedErrors.value[label] = true; // default-nya semua dicentang
+    });
+});
+
 
         function isSupportScale() {
             const touchDevice = (navigator.maxTouchPoints || "ontouchstart" in document.documentElement);
@@ -43,9 +53,32 @@ export default defineComponent({
             show ? scroll.disable() : scroll.enable();
         }, { immediate: true });
 
+        // Pengaturan Kesalahan: daftar kesalahan beserta warnanya secara statis
+        const errorColors = {
+            'Gharib': '#CCCCCC',
+            'Ghunnah': '#99CCFF',
+            'Harokat Tertukar': '#DFF18F',
+            'Huruf Tambah/Kurang': '#F4ACB6',
+            'Lupa (tidak dibaca)': '#FA7656',
+            'Mad (panjang pendek)': '#FFCC99',
+            'Makhroj (pengucapan huruf)': '#F4A384',
+            'Nun Mati dan Tanwin': '#F8DD74',
+            'Qalqalah (memantul)': '#D5B6D4',
+            'Tasydid (penekanan)': '#B5C9DF',
+            'Urutan Huruf atau Kata': '#FE7D8F',
+            'Waqof atau Washol (berhenti atau lanjut)': '#A1D4CF',
+            'Waqof dan Ibtida (berhenti dan memulai)': '#90CBAA',
+            'Lainnya': '#CC99CC',
+            'Ayat Lupa (tidak dibaca)': '#FA7656',
+            'Ayat Waqof atau Washol (berhenti atau lanjut)': '#FE7D8F',
+            'Ayat Waqof dan Ibtida (berhenti dan memulai)': '#90CBAA'
+        };
+
         return {
             shouldShow,
-            scaleFitures
+            scaleFitures,
+            errorColors,
+            checkedErrors
         }
     },
     render() {
@@ -66,7 +99,7 @@ export default defineComponent({
                         style="z-index: 2147483647;"  
                         onClick={(e: Event) => {
                             if ((e.target as HTMLElement).classList.contains(styles.card_container)) {
-                                this.shouldShow = false
+                                this.shouldShow = false;
                             }
                         }}>
                         <div class={styles.card_container}>
@@ -79,7 +112,7 @@ export default defineComponent({
                                 </div>
                                 <div class={["card-body custom-scrollbar", styles.card_body]}>
                                     <UsePwa>
-                                        {{
+                                        {({
                                             default: (props: DefaultSlotProps) => (
                                                 <>
                                                     {props.isAvailable && (
@@ -89,12 +122,14 @@ export default defineComponent({
                                                     )}
                                                 </>
                                             )
-                                        }}
+                                        })}
                                     </UsePwa>
 
                                     {this.scaleFitures && (
                                         <>
-                                            <h6 class="heading-small">{this.$t("general.scale")} {`(${this.$setting.scale})`}</h6>
+                                            <h6 class="heading-small">
+                                                {this.$t("general.scale")} {`(${this.$setting.scale})`}
+                                            </h6>
                                             <Range
                                                 v-model={this.$setting.scale}
                                                 min={0.3}
@@ -143,20 +178,19 @@ export default defineComponent({
 
                                     {/* quran-font select */}
                                     <h6 class="heading-small">{this.$t("general.quran-font")}</h6>
-                                   <select 
-  class="form-select mb-2"
-  value={this.$setting.fontType}
-  onInput={(e: Event) =>
-    this.$setting.fontType = ((e.target as HTMLSelectElement).value as unknown) as FontType
-  }
->
-  {this.$config.FONTS.map(font => (
-    <option key={font} value={font}>
-      {font}
-    </option>
-  ))}
-</select>
-
+                                    <select 
+                                        class="form-select mb-2"
+                                        value={this.$setting.fontType}
+                                        onInput={(e: Event) =>
+                                            this.$setting.fontType = ((e.target as HTMLSelectElement).value as unknown) as FontType
+                                        }
+                                    >
+                                        {this.$config.FONTS.map(font => (
+                                            <option key={font} value={font}>
+                                                {font}
+                                            </option>
+                                        ))}
+                                    </select>
 
                                     <div class="d-flex justify-content-between mt-3">
                                         <div class="h-100">
@@ -222,6 +256,33 @@ export default defineComponent({
                                             </div>
                                         </div>
                                     </div>
+
+                                    {/* Pengaturan Kesalahan (statik) dalam bentuk list vertikal dengan checkbox */}
+<hr />
+<h6 class="heading-small">Pengaturan Kesalahan</h6>
+<div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+    {Object.keys(this.errorColors).map(label => (
+        <div key={label} style={{
+            display: 'flex',
+            alignItems: 'center',
+            backgroundColor: this.errorColors[label as keyof typeof this.errorColors],
+            padding: '4px 8px',
+            borderRadius: '4px',
+            border: '1px solid #ccc',
+            color: '#000'
+        }}>
+            <input 
+                type="checkbox"
+                class="form-check-input me-2"
+                checked={this.checkedErrors[label]}
+                onInput={(e: Event) => this.checkedErrors[label] = (e.target as HTMLInputElement).checked}
+            />
+            <label>{label}</label>
+        </div>
+    ))}
+</div>
+
+
                                     <hr />
                                     <div class="d-flex justify-content-center mt-4">
                                         <Button type="primary" onClick={this.$setting.resetToDefault}>
@@ -236,4 +297,4 @@ export default defineComponent({
             </Transition>
         )
     }
-})
+});

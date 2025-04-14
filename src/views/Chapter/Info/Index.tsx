@@ -10,14 +10,15 @@ export default defineComponent({
             <>
                 <MainLayout>
                     <div class="mb-4 d-flex justify-content-center">
-                        <Button
-                            class="shadow-lg bg-gradient"
-                            size="sm"
-                            type="primary"
-                            onClick={() => this.$router.push({name: "chapter", params: {id: this.$route.params.id}})}
-                        >
-                            <font-awesome-icon icon="arrow-left" class="me-2" /> {this.$t("general.back-to-surah")}
-                        </Button>
+                    <Button
+  class="shadow-lg bg-gradient"
+  size="sm"
+  type="primary"
+  onClick={() => this.$router.go(-1)}
+>
+  <font-awesome-icon icon="arrow-left" class="me-2" /> {this.$t("general.back-to-surah")}
+</Button>
+
                     </div>
                     <Suspense key={this.$setting.locale}>
                         {{ 
