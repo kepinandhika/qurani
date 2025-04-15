@@ -91,36 +91,36 @@ export default defineComponent({
         id: "a",
         name: "Magang PT Universal Big Data (UBIG) - 2025",
         members: [
-          { value: 1, name: "Ahmad - SMK Brantas Karangkates" },
-          { value: 2, name: "Galuh - SMK BRANTAS KARANGKATES" },
-          { value: 3, name: "Richo - SMK Brantas Karangkates" },
-          { value: 4, name: "Dimas - SMK Brantas Karangkates" },
-          { value: 5, name: "Niko - SMK Brantas Karangkates" },
-          { value: 6, name: "Lang - SMK Brantas Karangkates" },
-          { value: 7, name: "Rotul - SMK Brantas Karangkates" },
-          { value: 8, name: "Tari - SMK Brantas Karangkates" },
-          { value: 9, name: "Farel Rasyah - SMK 4 Malang" },
-          { value: 10, name: "Naufal - SMKN 8 MALANG" },
-          { value: 11, name: "Rhama Damarwijaya - SMK PAWIYATAN SURABAYA" },
-          { value: 12, name: "Rangga - SMKN 1 DLANGGU" },
-          { value: 13, name: "Faiq Yassar - SMKN 4 MALANG" },
-          { value: 14, name: "Ahmad Royhan Najib - SMKN 8 Jember" },
-          { value: 15, name: "Naufal - SMKN 8 MALANG" },
-          { value: 16, name: "Alief Abdur Rahman Salam - SMK Pawiyatan Surabaya" },
-          { value: 17, name: "Zara Salsa Aulia - D2 PPLS - Polinema" },
-          { value: 18, name: "Muhammad Farhan - D2 PPLS - Polinema" },
-          { value: 19, name: "Ryan - SMKN 8 Malang" },
+          { id: 1, name: "Ahmad - SMK Brantas Karangkates" },
+          { id: 2, name: "Galuh - SMK BRANTAS KARANGKATES" },
+          { id: 3, name: "Richo - SMK Brantas Karangkates" },
+          { id: 4, name: "Dimas - SMK Brantas Karangkates" },
+          { id: 5, name: "Niko - SMK Brantas Karangkates" },
+          { id: 6, name: "Lang - SMK Brantas Karangkates" },
+          { id: 7, name: "Rotul - SMK Brantas Karangkates" },
+          { id: 8, name: "Tari - SMK Brantas Karangkates" },
+          { id: 9, name: "Farel Rasyah - SMK 4 Malang" },
+          { id: 10, name: "Naufal - SMKN 8 MALANG" },
+          { id: 11, name: "Rhama Damarwijaya - SMK PAWIYATAN SURABAYA" },
+          { id: 12, name: "Rangga - SMKN 1 DLANGGU" },
+          { id: 13, name: "Faiq Yassar - SMKN 4 MALANG" },
+          { id: 14, name: "Ahmad Royhan Najib - SMKN 8 Jember" },
+          { id: 15, name: "Naufal - SMKN 8 MALANG" },
+          { id: 16, name: "Alief Abdur Rahman Salam - SMK Pawiyatan Surabaya" },
+          { id: 17, name: "Zara Salsa Aulia - D2 PPLS - Polinema" },
+          { id: 18, name: "Muhammad Farhan - D2 PPLS - Polinema" },
+          { id: 19, name: "Ryan - SMKN 8 Malang" },
         ],
       },
       {
         id: "b",
         name: "Qurani 2025",
         members: [
-          { value: 1221, name: "Galuh saputra kelak" },
-          { value: 2827, name: "Kevin andhika pratama" },
-          { value: 8723, name: "Dewa yuna yunino" },
-          { value: 9012, name: "Niko sistiyan prayogi" },
-          { value: 8790, name: "Alvin muh jaidi nur" },
+          { id: 1221, name: "Galuh saputra kelak" },
+          { id: 2827, name: "Kevin andhika pratama" },
+          { id: 8723, name: "Dewa yuna yunino" },
+          { id: 9012, name: "Niko sistiyan prayogi" },
+          { id: 8790, name: "Alvin muh jaidi nur" },
         ],
       },
     ]);
@@ -133,6 +133,8 @@ export default defineComponent({
         selectedMember.value = null;
       }
       localStorage.setItem("selectedGroup", JSON.stringify(newVal));
+      // Refresh konten secara silent dengan mengganti refreshKey
+      refreshKey.value++;
     });
     watch(selectedMember, (newVal) => {
       localStorage.setItem("selectedMember", JSON.stringify(newVal));
@@ -143,11 +145,11 @@ export default defineComponent({
 
     // Data untuk Pengguna
     const staticUsers = ref([
-      { value: 4538, name: "Alfian prada prasetyo" },
-      { value: 7689, name: "Lang natanegara maju" },
-      { value: 7109, name: "Naufal prayoga" },
-      { value: 8145, name: "Fauzan" },
-      { value: 9021, name: "Tito Bryan ardiansyah" },
+      { id: 4538, name: "Alfian prada prasetyo" },
+      { id: 7689, name: "Lang natanegara maju" },
+      { id: 7109, name: "Naufal prayoga" },
+      { id: 8145, name: "Fauzan" },
+      { id: 9021, name: "Tito Bryan ardiansyah" },
     ]);
     const selectedUser = ref<any>(null);
     watch(selectedUser, (newVal) => {
@@ -155,6 +157,7 @@ export default defineComponent({
       if (newVal) {
         localStorage.setItem("participantName", newVal.name);
       }
+      refreshKey.value++;
     });
 
     onMounted(() => {
@@ -173,7 +176,6 @@ export default defineComponent({
       localStorage.removeItem("markedErrors");
     });
     
-
     // Ambil pilihan dari localStorage saat onMounted
     onMounted(() => {
       const savedGroup = localStorage.getItem("selectedGroup");
@@ -212,6 +214,9 @@ export default defineComponent({
     // extraTab menentukan mode tampilan: "grup" atau "pengguna"
     const extraTab = ref<ExtraTab>("grup");
 
+    // Properti refreshKey untuk trigger re-render silent
+    const refreshKey = ref(0);
+
     // Method untuk validasi dan navigasi ke halaman surah favorite
     function handleSurahFavorite(surahName: string, surahRoute: string) {
       if (extraTab.value === "grup") {
@@ -248,11 +253,12 @@ export default defineComponent({
       selectedUser,
       router,
       handleSurahFavorite,
+      refreshKey
     };
   },
   render() {
     return (
-      <MainLayout>
+      <MainLayout key={this.refreshKey}>
         {/* Navigation Tab Ekstra untuk Grup & Pengguna */}
         <Card class={"mb-3"}>
           <div class="d-flex justify-content-start mb-3">

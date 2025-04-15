@@ -209,29 +209,39 @@ export default defineComponent({
 
     // Fungsi untuk menandai kesalahan
     // Pastikan hanya instance kata yang dipilih (berdasarkan id) yang ditandai
-   function markError(word: Words | null, Kesalahan: string, isVerseError: boolean = false) {
-  let pageNumber: number | undefined;
-  if (word) {
-    // Untuk kesalahan pada kata, gunakan page_number dari objek word
-    pageNumber = word.page_number;
-  } else if (isVerseError) {
-    // Untuk kesalahan ayat, ambil page_number dari kata pertama di ayat tersebut
-    pageNumber = props.words.length > 0 ? props.words[0].page_number : 0;
-  }
-
-  if (word || isVerseError) {
-    markedErrors.value.push({
-      word,
-      Kesalahan,
-      verseNumber: props.verseNumber!,
-      chapterName: chapter.value?.name_simple || '',
-      isVerseError,
-      page: pageNumber,
-    });
-    saveMarkedErrors();
-    closeModal();
-  }
-}
+    function markError(word: Words | null, Kesalahan: string, isVerseError: boolean = false) {
+      let pageNumber: number | undefined;
+      let sanitizedWord: Words | null = null;
+      
+      if (word) {
+        // Buat salinan dari objek word dan cast ke Partial<Words> agar property bisa dihapus
+        const tempWord = { ...word } as Partial<Words>;
+        delete tempWord.audio_url;
+        delete tempWord.position;
+        delete tempWord.location;
+        delete tempWord.line_number;
+        delete tempWord.translation;
+        delete tempWord.transliteration;
+        sanitizedWord = tempWord as Words; // Casting kembali jika diperlukan
+        pageNumber = word.page_number;
+      } else if (isVerseError) {
+        pageNumber = props.words.length > 0 ? props.words[0].page_number : 0;
+      }
+    
+      if (sanitizedWord || isVerseError) {
+        markedErrors.value.push({
+          word: sanitizedWord,
+          Kesalahan,
+          verseNumber: props.verseNumber!,
+          chapterName: chapter.value?.name_simple || '',
+          isVerseError,
+          page: pageNumber,
+        });
+        saveMarkedErrors();
+        closeModal();
+      }
+    }
+    
 
 
     // Fungsi untuk menghapus tanda kesalahan
