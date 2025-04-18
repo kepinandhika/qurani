@@ -1,5 +1,5 @@
 import { Chapters, QuranReader, Words } from "@/types";
-import { defineComponent, PropType, ref, watch, onBeforeUnmount, VNode, computed, Teleport, onMounted } from "vue";
+import { defineComponent, PropType, ref, watch, onBeforeUnmount, VNode, computed, Teleport, onMounted, h, nextTick } from "vue";
 import { Tooltip as BSTooltip, Popover as BSPopover } from "bootstrap";
 import { useI18n } from "vue-i18n";
 import { useChapters } from "@/hooks/chapters";
@@ -21,7 +21,6 @@ interface MarkedError {
   chapterName: string;
   isVerseError: boolean; // Menandakan apakah kesalahan terjadi pada level ayat
   page?: number; // Nomor halaman (diambil dari word.page_number)
-  
 }
 
 export default defineComponent({
@@ -116,7 +115,7 @@ export default defineComponent({
     // Array untuk menyimpan data kesalahan yang ditandai
     const markedErrors = ref<MarkedError[]>([]);
 
-    // Warna background untuk tiap tipe kesalahan
+    // Warna background untuk tiap tipe kesalahan (default mapping)
     const errorColors: { [key: string]: string } = {
       'Gharib': '#CCCCCC',
       'Ghunnah': '#99CCFF',
@@ -135,8 +134,62 @@ export default defineComponent({
       'Ayat Lupa (tidak dibaca)': '#FA7656',
       'Ayat Waqof atau Washol (berhenti atau lanjut)': '#FE7D8F',
       'Ayat Waqof dan Ibtida (berhenti dan memulai)': '#90CBAA',
-     
     };
+
+    // Tambahkan ref untuk selectedUser dan selectedGroup (diambil dari localStorage)
+    const selectedUser = ref<any>(null);
+    const selectedGroup = ref<any>(null);
+    onMounted(() => {
+      const savedUser = localStorage.getItem("selectedUser");
+      if (savedUser) {
+        try {
+          selectedUser.value = JSON.parse(savedUser);
+        } catch (e) {
+          selectedUser.value = null;
+        }
+      }
+      const savedGroup = localStorage.getItem("selectedGroup");
+      if (savedGroup) {
+        try {
+          selectedGroup.value = JSON.parse(savedGroup);
+        } catch (e) {
+          selectedGroup.value = null;
+        }
+      }
+    });
+
+    // Computed untuk mengambil label error yang tersedia berdasarkan setting user, grup, atau global
+    const availableErrorLabels = computed(() => {
+      let settingsKey = "";
+      if (selectedUser.value) {
+        // Gunakan kunci untuk user tanpa penambahan id
+        settingsKey = "qurani_setting_user";
+      } else if (selectedGroup.value) {
+        // Gunakan kunci untuk grup, tambahkan id grup jika tersedia
+        settingsKey = "qurani_setting_grup_" + selectedGroup.value.id;
+      } else {
+        settingsKey = "qurani_setting_global";
+      }
+      const stored = localStorage.getItem(settingsKey);
+      if (!stored) return [];
+      try {
+        const parsed = JSON.parse(stored);
+        const checked = parsed.checkedErrors || {};
+        // Kembalikan array label yang diset true
+        return Object.keys(checked).filter(label => checked[label] === true);
+      } catch (e) {
+        return [];
+      }
+    });
+    
+
+    // Pisahkan label error untuk kata (tidak diawali "Ayat") dan untuk ayat (diawali "Ayat")
+    const availableWordErrorLabels = computed(() =>
+      availableErrorLabels.value.filter(label => !label.startsWith("Ayat"))
+    );
+    const availableVerseErrorLabels = computed(() =>
+      availableErrorLabels.value.filter(label => label.startsWith("Ayat"))
+    );
 
     // Fungsi untuk menentukan apakah kata yang berada pada posisi tertentu di-highlight
     function isHighlightWord(position: number) {
@@ -162,7 +215,6 @@ export default defineComponent({
     }
 
     // Fungsi untuk menampilkan modal ketika kata ditekan
-    // Periksa kesalahan berdasarkan id kata, sehingga jika ada kata yang sama teksnya, hanya instance yang ditekan yang diambil
     function showWrongWordModal(word: Words, isVerseEnd = false) {
       const isAlreadyMarked = markedErrors.value.some((err) =>
         (isVerseEnd && err.verseNumber === props.verseNumber) ||
@@ -188,7 +240,6 @@ export default defineComponent({
     }
 
     // Fungsi untuk mendapatkan gaya (style) untuk sebuah kata
-    // Pengecekan dilakukan berdasarkan id kata
     function getWordStyle(word: Words) {
       const error = markedErrors.value.find((err) =>
         (err.isVerseError && err.verseNumber === props.verseNumber) ||
@@ -208,13 +259,11 @@ export default defineComponent({
     }
 
     // Fungsi untuk menandai kesalahan
-    // Pastikan hanya instance kata yang dipilih (berdasarkan id) yang ditandai
     function markError(word: Words | null, Kesalahan: string, isVerseError: boolean = false) {
       let pageNumber: number | undefined;
       let sanitizedWord: Words | null = null;
       
       if (word) {
-        // Buat salinan dari objek word dan cast ke Partial<Words> agar property bisa dihapus
         const tempWord = { ...word } as Partial<Words>;
         delete tempWord.audio_url;
         delete tempWord.position;
@@ -222,7 +271,7 @@ export default defineComponent({
         delete tempWord.line_number;
         delete tempWord.translation;
         delete tempWord.transliteration;
-        sanitizedWord = tempWord as Words; // Casting kembali jika diperlukan
+        sanitizedWord = tempWord as Words;
         pageNumber = word.page_number;
       } else if (isVerseError) {
         pageNumber = props.words.length > 0 ? props.words[0].page_number : 0;
@@ -241,11 +290,8 @@ export default defineComponent({
         closeModal();
       }
     }
-    
-
 
     // Fungsi untuk menghapus tanda kesalahan
-    // Untuk kata, hapus hanya jika id kata sama
     function removeMarkedError(word: Words | null, isVerseError: boolean = false) {
       if (isVerseError) {
         markedErrors.value = markedErrors.value.filter((err) =>
@@ -264,9 +310,8 @@ export default defineComponent({
     function saveMarkedErrors() {
       try {
         localStorage.setItem('markedErrors', JSON.stringify(markedErrors.value));
-        // console.log('Data kesalahan berhasil disimpan:', markedErrors.value);
       } catch (error) {
-        // console.error("Gagal menyimpan data kesalahan:", error);
+        // Tangani error jika terjadi kegagalan penyimpanan
       }
     }
 
@@ -302,12 +347,10 @@ export default defineComponent({
             placement="top"
             options={{ html: true, trigger: "manual", content: () => refs.value.popoverContent! }}
             onInit={onInitPopover(word.position)}
-            
           >
             {{
               title: () => (
                 <div class="text-center">
-                  
                   {t("quran-reader.word-number", { ayah: props.verseNumber })}
                 </div>
               ),
@@ -318,7 +361,7 @@ export default defineComponent({
       }
     }
 
-    // Fungsi untuk memilih kata berdasarkan posisinya (digunakan sebagai fallback, namun pemilihan utama didasarkan pada id)
+    // Fungsi untuk memilih kata berdasarkan posisinya
     function selectWord(position: number) {
       selectedWord.value = props.words.find((word) => word.position === position) || null;
     }
@@ -328,25 +371,19 @@ export default defineComponent({
       const savedErrors = localStorage.getItem('markedErrors');
       if (savedErrors) {
         markedErrors.value = JSON.parse(savedErrors);
-        // console.log('Auto refresh: Data kesalahan diperbarui.', markedErrors.value);
       }
     }
-    // Timer untuk auto refresh
     let autoRefreshTimer: number;
 
-    // Saat komponen dimuat, ambil data kesalahan yang sudah tersimpan (jika ada)
     onMounted(() => {
       const savedErrors = localStorage.getItem('markedErrors');
       if (savedErrors) {
         markedErrors.value = JSON.parse(savedErrors);
-        // console.log('Data kesalahan dimuat:', markedErrors.value);
       }
       window.addEventListener("keydown", handleKeydown);
-      // Inisialisasi auto refresh setiap 30 detik
       autoRefreshTimer = window.setInterval(autoRefresh, 1000);
     });
     
-    // Hapus event listener dan timer saat komponen akan di-unmount
     onBeforeUnmount(() => {
       window.removeEventListener("keydown", handleKeydown);
       if (autoRefreshTimer) {
@@ -361,21 +398,18 @@ export default defineComponent({
       );
     });
     
-    // Watcher untuk properti highlight
     watch(() => props.highlight, (value, oldValue) => {
       if (!props.showTooltipWhenHighlight) return;
       if (typeof value === "number") tooltipInstance.value[value]?.show();
       if (typeof oldValue === "number") tooltipInstance.value[oldValue]?.hide();
     });
     
-    // Watcher untuk properti showTooltipWhenHighlight
     watch(() => props.showTooltipWhenHighlight, (value) => {
       if (typeof props.highlight === "number") {
         tooltipInstance.value[props.highlight]?.[value ? "show" : "hide"]();
       }
     });
     
-    // Fungsi untuk mendapatkan style khusus untuk ayat yang memiliki kesalahan
     function getVerseErrorStyle() {
       const verseError = markedErrors.value.find((err) =>
         err.isVerseError && err.verseNumber === props.verseNumber
@@ -397,6 +431,7 @@ export default defineComponent({
     }
     
     return {
+      t,
       tooltipInstance,
       popoverInstance,
       verseKey,
@@ -432,36 +467,10 @@ export default defineComponent({
       markError,
       removeMarkedError,
       getVerseErrorStyle,
-      viewAllMarkedErrors: () => {
-        try {
-          const data = localStorage.getItem('markedErrors');
-          if (!data) {
-            // console.log('Tidak ada data kesalahan yang tersimpan.');
-            return;
-          }
-          const errors = JSON.parse(data);
-          const verseErrors = errors.filter((err: { isVerseError: any; }) => err.isVerseError);
-          const wordErrors = errors.filter((err: { isVerseError: any; }) => !err.isVerseError);
-          if (verseErrors.length > 0) {
-            // console.log('Rekapan Kesalahan pada Ayat:');
-            verseErrors.forEach((error: { verseNumber: any; chapterName: any; Kesalahan: any; }, index: number) => {
-              //console.log(`${index + 1}. Ayat ${error.verseNumber} (${error.chapterName}): ${error.Kesalahan}`);
-            });
-          } else {
-            //console.log('Tidak ada kesalahan pada ayat yang ditandai.');
-          }
-          if (wordErrors.length > 0) {
-            //console.log('Rekapan Kesalahan pada Kata:');
-            wordErrors.forEach((error: { word: { text_uthmani: any; position: any; }; verseNumber: any; chapterName: any; Kesalahan: any; }, index: number) => {
-              //console.log(`${index + 1}. Kata "${error.word?.text_uthmani}" (Posisi: ${error.word?.position}, Ayat ${error.verseNumber}, ${error.chapterName}): ${error.Kesalahan}`);
-            });
-          } else {
-            //console.log('Tidak ada kesalahan pada kata yang ditandai.');
-          }
-        } catch (error) {
-          //console.error("Gagal memuat rekapan data kesalahan:", error);
-        }
-      }
+      availableWordErrorLabels,
+      availableVerseErrorLabels,
+      selectedUser,
+      selectedGroup,
     };
   },
   render() {
@@ -495,27 +504,41 @@ export default defineComponent({
                     ) : (
                       this.correctionTarget === 'kata' ? (
                         <>
-                          <button class="w-100 mb-2 btn" onClick={() => this.markError(this.selectedWord, 'Gharib')} style={{ backgroundColor: "#CCCCCC", borderWidth: "2px", fontWeight: "500", textAlign: "left", color: "#000000" }}>Gharib</button>
-                          <button class="w-100 mb-2 btn" onClick={() => this.markError(this.selectedWord, 'Ghunnah')} style={{ backgroundColor: "#99CCFF", borderWidth: "2px", fontWeight: "500", textAlign: "left", color: "#000000" }}>Ghunnah</button>
-                          <button class="w-100 mb-2 btn" onClick={() => this.markError(this.selectedWord, 'Harokat Tertukar')} style={{ backgroundColor: "#DFF18F", borderWidth: "2px", fontWeight: "500", textAlign: "left", color: "#000000" }}>Harokat Tertukar</button>
-                          <button class="w-100 mb-2 btn" onClick={() => this.markError(this.selectedWord, 'Huruf Tambah/Kurang')} style={{ backgroundColor: "#F4ACB6", borderWidth: "2px", fontWeight: "500", textAlign: "left", color: "#000000" }}>Huruf Tambah/Kurang</button>
-                          <button class="w-100 mb-2 btn" onClick={() => this.markError(this.selectedWord, 'Lupa (tidak dibaca)')} style={{ backgroundColor: "#FA7656", borderWidth: "2px", fontWeight: "500", textAlign: "left", color: "#000000" }}>Lupa (tidak dibaca)</button>
-                          <button class="w-100 mb-2 btn" onClick={() => this.markError(this.selectedWord, 'Mad (panjang pendek)')} style={{ backgroundColor: "#FFCC99", borderWidth: "2px", fontWeight: "500", textAlign: "left", color: "#000000" }}>Mad (panjang pendek)</button>
-                          <button class="w-100 mb-2 btn" onClick={() => this.markError(this.selectedWord, 'Makhroj (pengucapan huruf)')} style={{ backgroundColor: "#F4A384", borderWidth: "2px", fontWeight: "500", textAlign: "left", color: "#000000" }}>Makhroj (pengucapan huruf)</button>
-                          <button class="w-100 mb-2 btn" onClick={() => this.markError(this.selectedWord, 'Nun Mati dan Tanwin')} style={{ backgroundColor: "#F8DD74", borderWidth: "2px", fontWeight: "500", textAlign: "left", color: "#000000" }}>Nun Mati dan Tanwin</button>
-                          <button class="w-100 mb-2 btn" onClick={() => this.markError(this.selectedWord, 'Qalqalah (memantul)')} style={{ backgroundColor: "#D5B6D4", borderWidth: "2px", fontWeight: "500", textAlign: "left", color: "#000000" }}>Qalqalah (memantul)</button>
-                          <button class="w-100 mb-2 btn" onClick={() => this.markError(this.selectedWord, 'Tasydid (penekanan)')} style={{ backgroundColor: "#B5C9DF", borderWidth: "2px", fontWeight: "500", textAlign: "left", color: "#000000" }}>Tasydid (penekanan)</button>
-                          <button class="w-100 mb-2 btn" onClick={() => this.markError(this.selectedWord, 'Urutan Huruf atau Kata')} style={{ backgroundColor: "#FE7D8F", borderWidth: "2px", fontWeight: "500", textAlign: "left", color: "#000000" }}>Urutan Huruf atau Kata</button>
-                          <button class="w-100 mb-2 btn" onClick={() => this.markError(this.selectedWord, 'Waqof atau Washol (berhenti atau lanjut)')} style={{ backgroundColor: "#A1D4CF", borderWidth: "2px", fontWeight: "500", textAlign: "left", color: "#000000" }}>Waqof atau Washol (berhenti atau lanjut)</button>
-                          <button class="w-100 mb-2 btn" onClick={() => this.markError(this.selectedWord, 'Waqof dan Ibtida (berhenti dan memulai)')} style={{ backgroundColor: "#90CBAA", borderWidth: "2px", fontWeight: "500", textAlign: "left", color: "#000000" }}>Waqof dan Ibtida (berhenti dan memulai)</button>
-                          <button class="w-100 mb-2 btn" onClick={() => this.markError(this.selectedWord, 'Lainnya')} style={{ backgroundColor: "#CC99CC", borderWidth: "2px", fontWeight: "500", textAlign: "left", color: "#000000" }}>Lainnya</button>
+                          {this.availableWordErrorLabels.map((label: string) => (
+                            <button
+                              key={label}
+                              class="w-100 mb-2 btn"
+                              onClick={() => this.markError(this.selectedWord, label)}
+                              style={{
+                                backgroundColor: this.errorColors[label] || "#CCCCCC",
+                                borderWidth: "2px",
+                                fontWeight: "500",
+                                textAlign: "left",
+                                color: "#000000"
+                              }}
+                            >
+                              {label}
+                            </button>
+                          ))}
                         </>
                       ) : (
                         <>
-                          <button class="w-100 mb-2 btn" onClick={() => this.markError(null, 'Ayat Lupa (tidak dibaca)', true)} style={{ backgroundColor: "#FA7656", borderWidth: "2px", fontWeight: "500", textAlign: "left", color: "#000000" }}>Ayat Lupa (tidak dibaca)</button>
-                          <button class="w-100 mb-2 btn" onClick={() => this.markError(null, 'Ayat Waqof atau Washol (berhenti atau lanjut)', true)} style={{ backgroundColor: "#FE7D8F", borderWidth: "2px", fontWeight: "500", textAlign: "left", color: "#000000" }}>Ayat Waqof atau Washol (berhenti atau lanjut)</button>
-                          <button class="w-100 mb-2 btn" onClick={() => this.markError(null, 'Ayat Waqof dan Ibtida (berhenti dan memulai)', true)} style={{ backgroundColor: "#90CBAA", borderWidth: "2px", fontWeight: "500", textAlign: "left", color: "#000000" }}>Ayat Waqof dan Ibtida (berhenti dan memulai)</button>
-                          <button class="w-100 mb-2 btn" onClick={() => this.markError(null, 'Lainnya', true)} style={{ backgroundColor: "#CC99CC", borderWidth: "2px", fontWeight: "500", textAlign: "left", color: "#000000" }}>Lainnya</button>
+                          {this.availableVerseErrorLabels.map((label: string) => (
+                            <button
+                              key={label}
+                              class="w-100 mb-2 btn"
+                              onClick={() => this.markError(null, label, true)}
+                              style={{
+                                backgroundColor: this.errorColors[label] || "#CCCCCC",
+                                borderWidth: "2px",
+                                fontWeight: "500",
+                                textAlign: "left",
+                                color: "#000000"
+                              }}
+                            >
+                              {label}
+                            </button>
+                          ))}
                         </>
                       )
                     )}
@@ -539,28 +562,7 @@ export default defineComponent({
           onMouseover={() => this.isHover = true}
           onMouseleave={() => this.isHover = false}
         >
-          {/* {this.shouldUseButton && (
-            <div class="d-none">
-              <div ref={(ref) => this.refs.popoverContent = (ref as HTMLElement)} class="d-flex">
-                {this.buttons.includes("Bookmark") && this.chapter !== null && (
-                  <ButtonBookmark
-                    verseKey={this.verseKey}
-                    name={this.chapter.name_simple}
-                  />
-                )}
-                {this.buttons.includes("Copy") && (
-                  <ButtonCopy text={this.textUthmani} />
-                )}
-                {this.buttons.includes("Tafsir") && (
-                  <ButtonTafsir chapterId={this.chapterId!} verseNumber={this.verseNumber!} />
-                )}
-                {this.buttons.includes("Play") && (
-                  <ButtonPlay chapterId={this.chapterId!} verseNumber={this.verseNumber!} />
-                )}
-              </div>
-            </div>
-          )} */}
-          {this.words.map(word => this.wordWrapper(word, (
+          {this.words.map((word: Words) => this.wordWrapper(word, (
             <Tooltip
               key={`tooltip-${word.id}`}
               tag="div"
