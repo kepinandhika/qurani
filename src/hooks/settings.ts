@@ -53,8 +53,10 @@ export interface Config {
 }
 
 export const config: Config = {
-    APP_NAME: import.meta.env.VITE_APP_NAME, 
-    API_PREFIX: "https://api.quran.com/api/v4/",
+    APP_NAME: import.meta.env.VITE_APP_NAME,
+    // API_PREFIX: "http://localhost:5175/",
+    // API_PREFIX: "https://api.quran.com/api/v4/",
+    API_PREFIX: "http://127.0.0.1:8000/api/v1/",
     THEMES: [
         "auto",
         "light",
