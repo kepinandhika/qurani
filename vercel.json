@@ -1,7 +1,7 @@
 {
     "version": 2,
-    "buildCommand": "yarn build",
-    "devCommand": "yarn dev",
+   "buildCommand": "npm run build",
+   "devCommand": "npm run dev",
     "headers": [
         {
             "source": "/(.*)",

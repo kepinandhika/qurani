@@ -1,5 +1,5 @@
 import { Chapters, QuranReader, Words } from "@/types";
-import { defineComponent, PropType, ref, computed, Teleport, onMounted, onBeforeUnmount, inject } from "vue";
+import { defineComponent, PropType, ref, computed, Teleport, onMounted, onBeforeUnmount, inject, Ref } from "vue";
 import { Tooltip as BSTooltip, Popover as BSPopover } from "bootstrap";
 import { useI18n } from "vue-i18n";
 import { useChapters } from "@/hooks/chapters";
@@ -386,7 +386,7 @@ export default defineComponent({
         apiErrorMessage.value = null;
       } catch (error) {
         console.error("ArabicText.tsx: Failed to fetch settings from API:", error);
-        apiErrorMessage.value = `Gagal mengambil pengaturan: ${error.message}`;
+        apiErrorMessage.value = `Gagal mengambil pengaturan: ${error instanceof Error ? error.message : "Unknown error"}`;
       } finally {
         isLoadingSettings.value = false;
       }

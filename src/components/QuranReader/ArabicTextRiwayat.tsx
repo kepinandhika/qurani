@@ -1,5 +1,5 @@
 import { Chapters, QuranReader, Words } from "@/types";
-import { defineComponent, PropType, ref, computed, Teleport, onMounted, onBeforeUnmount, inject } from "vue";
+import { defineComponent, PropType, ref, computed, Teleport, onMounted, onBeforeUnmount, inject, Ref } from "vue";
 import { Tooltip as BSTooltip, Popover as BSPopover } from "bootstrap";
 import { useI18n } from "vue-i18n";
 import { useChapters } from "@/hooks/chapters";
@@ -183,8 +183,8 @@ export default defineComponent({
       if (data) {
         try {
           setoranData.value = JSON.parse(data);
-          hasHasil.value = setoranData.value && "hasil" in setoranData.value;
-          if (hasHasil.value && setoranData.value.kesalahan) {
+          hasHasil.value = !!(setoranData.value && "hasil" in setoranData.value);
+          if (hasHasil.value && setoranData.value && setoranData.value.kesalahan) {
             const parsedKesalahan = JSON.parse(setoranData.value.kesalahan);
             const ayatKesalahan = parsedKesalahan.ayatSalah.map((err: any) => ({
               salahKey: err.salahKey,
@@ -217,7 +217,7 @@ export default defineComponent({
               });
             });
             const filteredAyatKesalahan = ayatKesalahan.filter(
-              (err) => err.NamaSurat === chapter.value?.name_simple && err.noAyat === props.verseNumber
+              (err: Kesalahan) => err.NamaSurat === chapter.value?.name_simple && err.noAyat === props.verseNumber
             );
             const wordIds = new Set(props.words.map((w) => w.id));
             const filteredKataKesalahan = kataKesalahan.filter(
@@ -416,7 +416,7 @@ export default defineComponent({
         apiErrorMessage.value = null;
       } catch (error) {
         console.error("ArabicText.tsx: Failed to fetch settings from API:", error);
-        apiErrorMessage.value = `Gagal mengambil pengaturan: ${error.message}`;
+        apiErrorMessage.value = `Gagal mengambil pengaturan: ${error instanceof Error ? error.message : "Unknown error"}`;
       } finally {
         isLoadingSettings.value = false;
       }
@@ -685,6 +685,7 @@ export default defineComponent({
       selectWord,
       kesalahan,
       errorColors,
+      defaultColorMap, // Ensure defaultColorMap is returned here
       getWordStyle,
       getWordErrorTooltip,
       getVerseErrorTooltip,
@@ -799,7 +800,7 @@ export default defineComponent({
             html: true,
             placement: "top",
             delay: { show: 200, hide: 200 },
-            content: this.getVerseErrorTooltip(),
+            title: this.getVerseErrorTooltip(),
             container: "body",
           }}
           onInit={this.onInitErrorTooltip(`verse-${this.verseKey}`)}
