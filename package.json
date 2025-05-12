@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host",
-    "build": "vue-tsc && vite build && npm-build-zip --source=dist --destination=. --name=build --name_only=true --info=true",
+    "build": "vue-tsc --noEmit && vite build && npm-build-zip --source=dist --destination=. --name=build --name_only=true --info=true",
     "preview": "vite preview",
     "lint": "eslint . --ext .js,.vue,.ts"
   },
