@@ -124,7 +124,7 @@ export default defineComponent({
         localStorage.removeItem(settingsKey);
         await fetchSettings(selectedGroup.value?.id, selectedUser.value?.id);
       } catch (error) {
-        resetErrorMessage.value = `Gagal mereset pengaturan: ${error.message}`;
+        resetErrorMessage.value = `Gagal mereset pengaturan: ${(error as Error).message}`;
       }
     };
 
@@ -194,7 +194,7 @@ export default defineComponent({
         apiErrorMessage.value = null;
       } catch (error) {
         console.error("Setting.tsx: Gagal mengambil pengaturan dari API:", error);
-        apiErrorMessage.value = `Gagal mengambil pengaturan: ${error.message}`;
+        apiErrorMessage.value = `Gagal mengambil pengaturan: ${(error as Error).message}`;
       }
     };
 
