@@ -667,8 +667,8 @@ export default defineComponent({
     }
 
     function goBack() {
-      window.top.location.href = `${apiUrl}/qurani`;
-    }
+      window.location.href = `${apiUrl}/qurani`;
+    };
 
     const surahOptions = computed(() => {
       return chapters.data.value.map((ch) => ch.name_simple);

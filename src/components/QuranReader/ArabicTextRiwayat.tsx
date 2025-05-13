@@ -793,74 +793,68 @@ export default defineComponent({
             </div>
           )}
         </Teleport>
+        <span
+  dir="rtl"
+  class={[
+    styles.arabic_text,
+    {
+      [styles.highlight]: this.highlight === true,
+      [styles.hover]: this.isHover && this.enableHover,
+      [styles.verse_error]: this.kesalahan && this.kesalahan.some(
+        (err) => err.kata === null && err.noAyat === this.verseNumber
+      ),
+    },
+  ]}
+  style={[{ ...this.getVerseErrorStyle(), position: "relative" }, this.getVerseErrorTooltip() ? { cursor: "default" } : {}]}
+  onMouseover={() => (this.isHover = true)}
+  onMouseleave={() => (this.isHover = false)}
+>
+  <Tooltip
+    options={{
+      trigger: "hover",
+      html: true,
+      placement: "top",
+      delay: { show: 200, hide: 200 },
+      title: this.getVerseErrorTooltip(),
+      container: "body",
+    }}
+    onInit={this.onInitErrorTooltip(`verse-${this.verseKey}`)}
+  >
+    {this.words.map((word: Words) =>
+      this.wordWrapper(word, (
         <Tooltip
-          tag="span"
+          key={`tooltip-${word.id}`}
+          timeout={0}
           options={{
             trigger: "hover",
             html: true,
-            placement: "top",
             delay: { show: 200, hide: 200 },
-            title: this.getVerseErrorTooltip(),
+            placement: "top",
+            title: this.getWordErrorTooltip(word),
             container: "body",
           }}
-          onInit={this.onInitErrorTooltip(`verse-${this.verseKey}`)}
-          dir="rtl"
-          class={[
-            styles.arabic_text,
-            {
-              [styles.highlight]: this.highlight === true,
-              [styles.hover]: this.isHover && this.enableHover,
-              [styles.verse_error]: this.kesalahan && this.kesalahan.some(
-                (err) => err.kata === null && err.noAyat === this.verseNumber
-              ),
-            },
-          ]}
-          style={[{ ...this.getVerseErrorStyle(), position: "relative" }, this.getVerseErrorTooltip() ? { cursor: "default" } : {}]}
-          onMouseover={() => (this.isHover = true)}
-          onMouseleave={() => (this.isHover = false)}
+          onInit={this.onInitErrorTooltip(`word-${word.id}`)}
         >
-          {this.words.map((word: Words) =>
-            this.wordWrapper(word, (
-              <Tooltip
-                key={`tooltip-${word.id}`}
-                tag="div"
-                timeout={0}
-                options={{
-                  trigger: "hover",
-                  html: true,
-                  delay: { show: 200, hide: 200 },
-                  placement: "top",
-                  content: this.getWordErrorTooltip(word),
-                  container: "body",
-                }}
-                onInit={this.onInitErrorTooltip(`word-${word.id}`)}
-                class={[styles.text_wrapper, { [styles.highlight_word]: this.isHighlightWord(word.position), "ps-2": this.showTransliterationInline }]}
-                {...{
-                  "data-word-position": word.position,
-                  "data-word-location": word.location,
-                  "data-word-type": word.char_type_name,
-                }}
-                style={[{ ...this.getWordStyle(word), position: "relative" }, this.getWordErrorTooltip(word) ? { cursor: "default" } : {}]}
-              >
-                <div
-                  class={["fs-arabic-auto", "text-center", { "font-uthmanic": word.char_type_name === "end", "font-arabic-auto": word.char_type_name === "word" }]}
-                >
-                  {this.decodeUnicode(word.text_uthmani)}
-                </div>
-                {this.showTransliterationInline && (
-                  <div class="text-center mt-1 mb-1">
-                    <i>{word.char_type_name === "word" ? word.transliteration?.text : word.translation?.text}</i>
-                  </div>
-                )}
-                {this.showTranslationInline && (word.char_type_name === "word" || !this.showTransliterationInline) && (
-                  <div class="text-center mt-1 mb-1">
-                    <p>{word.translation?.text}</p>
-                  </div>
-                )}
-              </Tooltip>
-            ))
+          <div
+            class={["fs-arabic-auto", "text-center", { "font-uthmanic": word.char_type_name === "end", "font-arabic-auto": word.char_type_name === "word" }]}
+          >
+            {this.decodeUnicode(word.text_uthmani)}
+          </div>
+          {this.showTransliterationInline && (
+            <div class="text-center mt-1 mb-1">
+              <i>{word.char_type_name === "word" ? word.transliteration?.text : word.translation?.text}</i>
+            </div>
+          )}
+          {this.showTranslationInline && (word.char_type_name === "word" || !this.showTransliterationInline) && (
+            <div class="text-center mt-1 mb-1">
+              <p>{word.translation?.text}</p>
+            </div>
           )}
         </Tooltip>
+      ))
+    )}
+  </Tooltip>
+</span>
       </>
     );
   },

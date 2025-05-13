@@ -33,6 +33,7 @@
   "include": [
     "src/**/*.ts",
     "src/**/*.d.ts",
+    "src/shims-tsx.d.ts",
     "src/**/*.tsx",
     "src/**/*.vue"
   ],
