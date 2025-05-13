@@ -1,6 +1,6 @@
 import router from "@/routes";
 import { defineComponent, ref, onMounted, reactive, watch, computed, watchEffect } from "vue";
-import { useChapters, Chapters } from "@/hooks/chapters";
+import { useChapters } from "@/hooks/chapters";
 import { useJuzs, Juz } from "@/hooks/juzs";
 import vSelect from "vue-select";
 import "vue-select/dist/vue-select.css";
@@ -293,8 +293,8 @@ export default defineComponent({
               data.words.map((text: string, index: number) => ({
                 salahKey: data.salahKey,
                 salah,
-                NamaSurat: recapData.surahDibaca || err.surah || "",
-                Page: data.pages?.[index] || data.page || getVersePage(recapData.surahDibaca || err.surah, 1) || parseInt(recapData.awalHalaman) || 1,
+                NamaSurat: recapData.surahDibaca || "",
+                Page: data.pages?.[index] || data.page || getVersePage(recapData.surahDibaca, 1) || parseInt(recapData.awalHalaman) || 1,
                 noAyat: 0,
                 kata: {
                   id: Date.now() + index,
@@ -637,7 +637,11 @@ export default defineComponent({
           localStorage.removeItem("kesalahan");
 
           setTimeout(() => {
-            window.top.location.href = `${apiUrl}/qurani`;
+            if (window.top) {
+              window.top.location.href = `${apiUrl}/qurani`;
+            } else {
+              console.error("window.top is null or undefined.");
+            }
           }, 3000);
 
           setTimeout(() => {
